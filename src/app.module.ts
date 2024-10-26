@@ -6,7 +6,7 @@ import { DatabaseModule } from './database/database.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import { ConfigModule } from 'config/config.module';
+import { ConfigModule } from './config/config.module';
 
 @Module({
   imports: [
