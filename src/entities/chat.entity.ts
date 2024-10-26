@@ -1,9 +1,11 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { ChatMember } from './chatMember.entity';
+import { Message } from './message.entity';
 export enum ChatStatus {
   Pr = 'private',
   Gr = 'group',
 }
-@Entity({ name: 'chats' })
+@Entity({ name: 'chat' })
 export class Chat {
   @PrimaryGeneratedColumn()
   id: number;
@@ -28,4 +30,10 @@ export class Chat {
 
   @Column({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
   created_at: Date;
+
+  @OneToMany(() => Message, (m) => m.chat)
+  messages: Message[];
+
+  @OneToMany(() => ChatMember, (c) => c.chat)
+  chatMembers: ChatMember[];
 }

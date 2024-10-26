@@ -1,11 +1,13 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
-export enum MessageStatus {
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { User } from './user.entity';
+import { Message } from './message.entity';
+export enum StatusMessage {
   Sent = 'sent',
   Delivered = 'delivered',
   Read = 'read',
 }
 @Entity({ name: 'messageStatus' })
-export class messageStatus {
+export class MessageStatus {
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -16,7 +18,13 @@ export class messageStatus {
 
   @Column({
     type: 'enum',
-    enum: MessageStatus,
+    enum: StatusMessage,
   })
-  status: MessageStatus;
+  status: StatusMessage;
+
+  @ManyToOne(() => Message, (message) => message.messageStatus)
+  message: Message;
+
+  @ManyToOne(() => User, (user) => user.messageStatus)
+  user: User;
 }
