@@ -16,14 +16,9 @@ export class Chat {
   @Column({
     type: 'enum',
     enum: ChatStatus,
+    default: ChatStatus.Pr,
   })
   type: ChatStatus;
-
-  @Column()
-  nickname: string;
-
-  @Column()
-  fullName: string;
 
   @Column()
   avatar: string;
@@ -31,9 +26,9 @@ export class Chat {
   @Column({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
   created_at: Date;
 
-  @OneToMany(() => Message, (m) => m.chat)
+  @OneToMany(() => Message, (m) => m.chat, { onDelete: 'CASCADE' })
   messages: Message[];
 
-  @OneToMany(() => ChatMember, (c) => c.chat)
+  @OneToMany(() => ChatMember, (c) => c.chat, { onDelete: 'CASCADE' })
   chatMembers: ChatMember[];
 }
