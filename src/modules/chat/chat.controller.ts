@@ -10,7 +10,7 @@ import {
 import { ChatService } from './chat.service';
 import { CreateChatDto } from './dto/create-chat.dto';
 import { UpdateChatDto } from './dto/update-chat.dto';
-import { ChatRole } from 'src/entities/chatMember.entity';
+import { ChatRole } from '../../entities/chatMember.entity';
 
 @Controller('chat')
 export class ChatController {

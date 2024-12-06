@@ -7,8 +7,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { ChatRole } from 'src/entities/chatMember.entity';
-import { ChatStatus } from 'src/entities/chat.entity';
+import { ChatRole, ChatStatus } from '../../../entities/chatMember.entity';
 
 export class ChatMemberDto {
   @IsNotEmpty()
