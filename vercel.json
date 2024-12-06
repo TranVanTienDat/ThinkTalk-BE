@@ -1,16 +1,3 @@
 {
-  "version": 2,
-  "name": "chat-app-server",
-  "builds": [
-    {
-      "src": "dist/main.ts",
-      "use": "@vercel/node"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "dist/main.ts"
-    }
-  ]
+  "rewrites": [{ "source": "/(.*)", "destination": "/" }]
 }
