@@ -1,26 +1,15 @@
-import {
-  Column,
-  Entity,
-  ManyToOne,
-  OneToMany,
-  PrimaryGeneratedColumn,
-} from 'typeorm';
-import { User } from './user.entity';
+import { Column, Entity, ManyToOne, OneToMany } from 'typeorm';
+import { BaseEntity } from '../common/entities/base.entity';
+import { Attachment } from './attachment.entity';
 import { Chat } from './chat.entity';
 import { MessageStatus } from './messageStatus.entity';
 import { Notification } from './notification.entity';
-import { Attachment } from './attachment.entity';
+import { User } from './user.entity';
 
 @Entity({ name: 'message' })
-export class Message {
-  @PrimaryGeneratedColumn()
-  id: number;
-
-  @Column()
+export class Message extends BaseEntity {
+  @Column({ name: 'content', nullable: false, default: null })
   content: string;
-
-  @Column({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
-  created_at: Date;
 
   @ManyToOne(() => User, (user) => user.messages)
   user: User;

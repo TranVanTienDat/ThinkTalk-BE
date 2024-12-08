@@ -42,7 +42,7 @@ export class AuthService {
       secret,
     });
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { password: hashed, created_at, updated_at, ...result } = newUser;
+    const { password: hashed, createdAt, updatedAt, ...result } = newUser;
 
     return {
       statusCode: 200,
@@ -70,7 +70,7 @@ export class AuthService {
       secret,
     });
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { password: hashed, created_at, updated_at, ...result } = user;
+    const { password: hashed, createdAt, updatedAt, ...result } = user;
 
     return {
       statusCode: 200,

@@ -28,23 +28,23 @@ export class ChatController {
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.chatService.findOne(+id);
+    return this.chatService.findOne(id);
   }
 
   @Put(':id')
   update(@Param('id') id: string, @Body() updateChatDto: UpdateChatDto) {
-    return this.chatService.update(+id, updateChatDto);
+    return this.chatService.update(id, updateChatDto);
   }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.chatService.remove(+id);
+    return this.chatService.remove(id);
   }
 
   @Post(':chatId/members')
   async addMembersToChat(
-    @Param('chatId') chatId: number,
-    @Body('userIds') userIds: number[],
+    @Param('chatId') chatId: string,
+    @Body('userIds') userIds: string[],
     @Body('role') role: ChatRole = ChatRole.MEMBER,
   ) {
     return await this.chatService.addMembersToChat(userIds, chatId, role);
@@ -52,8 +52,8 @@ export class ChatController {
 
   @Delete(':chatId/members/:userId')
   async removeMemberFromChat(
-    @Param('chatId') chatId: number,
-    @Param('userId') userId: number,
+    @Param('chatId') chatId: string,
+    @Param('userId') userId: string,
   ) {
     return await this.chatService.removeMemberFromChat(userId, chatId);
   }

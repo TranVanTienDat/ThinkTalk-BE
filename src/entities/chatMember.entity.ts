@@ -1,6 +1,7 @@
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
-import { User } from './user.entity';
+import { Column, Entity, ManyToOne } from 'typeorm';
+import { BaseEntity } from '../common/entities/base.entity';
 import { Chat } from './chat.entity';
+import { User } from './user.entity';
 export enum ChatStatus {
   Pr = 'private',
   Gr = 'group',
@@ -10,19 +11,13 @@ export enum ChatRole {
   MEMBER = 'member',
 }
 @Entity({ name: 'chatMembers' })
-export class ChatMember {
-  @PrimaryGeneratedColumn()
-  id: number;
-
+export class ChatMember extends BaseEntity {
   @Column({
     type: 'enum',
     enum: ChatRole,
     default: ChatRole.MEMBER,
   })
   role: ChatRole;
-
-  @Column({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
-  created_at: Date;
 
   @ManyToOne(() => User, (user) => user.chatMembers)
   user: User;
