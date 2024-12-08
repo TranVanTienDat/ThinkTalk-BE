@@ -1,6 +1,5 @@
 import { Exclude } from 'class-transformer';
 import {
-  Column,
   CreateDateColumn,
   DeleteDateColumn,
   PrimaryGeneratedColumn,
@@ -25,12 +24,6 @@ export abstract class BaseEntity {
     onUpdate: 'CURRENT_TIMESTAMP',
   })
   public updatedAt: Date;
-
-  @Column({ name: 'created_by', nullable: true, default: null })
-  public createdBy: string;
-
-  @Column({ name: 'updated_by', nullable: true, default: null })
-  public updatedBy: string;
 
   @DeleteDateColumn({
     name: 'deleted_at',

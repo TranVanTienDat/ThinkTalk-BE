@@ -17,13 +17,12 @@ export class ChatService {
   ) {}
 
   async create(createChatDto: CreateChatDto) {
-    const { name, type, avatar, chatMembers } = createChatDto;
+    const { name, type, chatMembers } = createChatDto;
 
     const chat = this.chatRepository.create({
       name,
       type,
-      avatar,
-      created_at: new Date(),
+      createdAt: new Date(),
     });
     const savedChat = await this.chatRepository.save(chat);
 
@@ -32,7 +31,7 @@ export class ChatService {
         user: { id: member.userId },
         chat: savedChat,
         role: member.role,
-        created_at: new Date(),
+        createdAt: new Date(),
       });
     });
 
@@ -48,11 +47,11 @@ export class ChatService {
     return `This action returns all chat`;
   }
 
-  findOne(id: number) {
+  findOne(id: string) {
     return `This action returns a #${id} chat`;
   }
 
-  async update(id: number, updateChatDto: UpdateChatDto) {
+  async update(id: string, updateChatDto: UpdateChatDto) {
     const chat = await this.chatRepository.findOneBy({ id });
     if (!chat) {
       throw new NotFoundException('Chat not found');
@@ -62,7 +61,7 @@ export class ChatService {
     return updatedChat;
   }
 
-  async remove(id: number) {
+  async remove(id: string) {
     const chat = await this.chatRepository.findOneBy({ id });
     if (!chat) {
       throw new NotFoundException('Chat not found');
@@ -72,8 +71,8 @@ export class ChatService {
   }
 
   async addMembersToChat(
-    userIds: number[],
-    chatId: number,
+    userIds: string[],
+    chatId: string,
     role: ChatRole = ChatRole.MEMBER,
   ) {
     const chat = await this.chatRepository.findOneBy({ id: chatId });
@@ -95,7 +94,7 @@ export class ChatService {
     return await this.chatMemberRepository.save(chatMembers);
   }
 
-  async removeMemberFromChat(userId: number, chatId: number) {
+  async removeMemberFromChat(userId: string, chatId: string) {
     const chatMember = await this.chatMemberRepository.findOne({
       where: { user: { id: userId }, chat: { id: chatId } },
     });

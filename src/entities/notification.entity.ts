@@ -1,25 +1,24 @@
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
-import { User } from './user.entity';
+import { Column, CreateDateColumn, Entity, ManyToOne } from 'typeorm';
+import { BaseEntity } from '../common/entities/base.entity';
 import { Message } from './message.entity';
+import { User } from './user.entity';
 export enum NotificationType {
   Message = 'message',
   GroupInvite = 'group_invite',
 }
 @Entity({ name: 'notification' })
-export class Notification {
-  @PrimaryGeneratedColumn()
-  id: number;
-
+export class Notification extends BaseEntity {
   @Column({
     type: 'enum',
     enum: NotificationType,
   })
   type: NotificationType;
 
-  @Column({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
-  created_at: Date;
-
-  @Column({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
+  @CreateDateColumn({
+    name: 'read_at',
+    type: 'timestamp',
+    default: () => 'CURRENT_TIMESTAMP',
+  })
   read_at: Date;
 
   @ManyToOne(() => User, (user) => user.notifications)

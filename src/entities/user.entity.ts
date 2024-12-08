@@ -1,4 +1,5 @@
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, OneToMany } from 'typeorm';
+import { BaseEntity } from '../common/entities/base.entity';
 import { ChatMember } from './chatMember.entity';
 import { Message } from './message.entity';
 import { MessageStatus } from './messageStatus.entity';
@@ -9,20 +10,17 @@ export enum UserStatus {
 }
 
 @Entity({ name: 'user' })
-export class User {
-  @PrimaryGeneratedColumn()
-  id: number;
-
-  @Column()
+export class User extends BaseEntity {
+  @Column({ name: 'email', nullable: true })
   email: string;
 
-  @Column()
+  @Column({ name: 'password', nullable: true })
   password: string;
-  @Column()
+  @Column({ name: 'fullName', nullable: true })
   fullName: string;
-  @Column({ nullable: true })
+  @Column({ name: 'nickname', nullable: false })
   nickname: string;
-  @Column({ nullable: true })
+  @Column({ name: 'avatar', nullable: false })
   avatar: string;
 
   @Column({
@@ -31,12 +29,6 @@ export class User {
     default: UserStatus.ON,
   })
   status: UserStatus;
-
-  @Column({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
-  created_at: Date;
-
-  @Column({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
-  updated_at: Date;
 
   @OneToMany(() => Message, (message) => message.user)
   messages: Message[];
