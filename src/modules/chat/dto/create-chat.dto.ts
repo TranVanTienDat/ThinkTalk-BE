@@ -7,8 +7,9 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { ChatRole, ChatStatus } from '../../../entities/chatMember.entity';
+import { ChatRole } from '../../../entities/chatMember.entity';
 import { ApiProperty } from '@nestjs/swagger';
+import { ChatStatus } from '../../../entities/chat.entity';
 
 export class ChatMemberDto {
   @ApiProperty({ description: 'userId', example: '123' })
