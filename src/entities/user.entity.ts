@@ -4,6 +4,7 @@ import { ChatMember } from './chatMember.entity';
 import { Message } from './message.entity';
 import { MessageStatus } from './messageStatus.entity';
 import { Notification } from './notification.entity';
+import { Device } from './devices.entity';
 export enum UserStatus {
   ON = 'online',
   OFF = 'offline',
@@ -41,4 +42,7 @@ export class User extends BaseEntity {
 
   @OneToMany(() => MessageStatus, (ms) => ms.user)
   messageStatus: MessageStatus[];
+
+  @OneToMany(() => Device, (d) => d.user)
+  devices: Device[];
 }

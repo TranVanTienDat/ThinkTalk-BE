@@ -1,4 +1,4 @@
-import { Column, Entity, ManyToOne, OneToMany } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
 import { BaseEntity } from '../common/entities/base.entity';
 import { Attachment } from './attachment.entity';
 import { Chat } from './chat.entity';
@@ -12,9 +12,11 @@ export class Message extends BaseEntity {
   content: string;
 
   @ManyToOne(() => User, (user) => user.messages)
+  @JoinColumn({ name: 'user_id' })
   user: User;
 
   @ManyToOne(() => Chat, (c) => c.messages)
+  @JoinColumn({ name: 'chat_id' })
   chat: Chat;
 
   @OneToMany(() => MessageStatus, (c) => c.message)

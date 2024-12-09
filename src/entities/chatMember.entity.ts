@@ -1,15 +1,13 @@
-import { Column, Entity, ManyToOne } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
 import { BaseEntity } from '../common/entities/base.entity';
 import { Chat } from './chat.entity';
 import { User } from './user.entity';
-export enum ChatStatus {
-  Pr = 'private',
-  Gr = 'group',
-}
+
 export enum ChatRole {
   ADMIN = 'admin',
   MEMBER = 'member',
 }
+
 @Entity({ name: 'chatMembers' })
 export class ChatMember extends BaseEntity {
   @Column({
@@ -20,8 +18,10 @@ export class ChatMember extends BaseEntity {
   role: ChatRole;
 
   @ManyToOne(() => User, (user) => user.chatMembers)
+  @JoinColumn({ name: 'user_id' })
   user: User;
 
   @ManyToOne(() => Chat, (c) => c.chatMembers)
+  @JoinColumn({ name: 'chat_id' })
   chat: Chat;
 }
