@@ -1,4 +1,4 @@
-import { Column, Entity, ManyToOne } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
 import { BaseEntity } from '../common/entities/base.entity';
 import { Message } from './message.entity';
 import { User } from './user.entity';
@@ -21,6 +21,7 @@ export class MessageStatus extends BaseEntity {
   status: StatusMessage;
 
   @ManyToOne(() => Message, (message) => message.messageStatus)
+  @JoinColumn({ name: 'message_id' })
   message: Message;
 
   @ManyToOne(() => User, (user) => user.messageStatus)

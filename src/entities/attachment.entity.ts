@@ -1,4 +1,10 @@
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { Message } from './message.entity';
 
 @Entity({ name: 'attachment' })
@@ -15,5 +21,6 @@ export class Attachment {
   uploaded_at: Date;
 
   @ManyToOne(() => Message, (m) => m.attachments)
+  @JoinColumn({ name: 'message_id' })
   message: Message;
 }

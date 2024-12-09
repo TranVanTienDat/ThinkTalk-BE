@@ -1,6 +1,8 @@
 {
-  "watch": ["src"],
-  "ext": "ts",
+  "verbose": true,
+  "watch": ["src/**/*.ts"],
+  "pollingInterval": 100,
+  "legacyWatch": true,
   "ignore": ["src/**/*.spec.ts"],
-  "exec": "ts-node -r tsconfig-paths/register src/main.ts"
+  "exec": "ts-node ./src/main.ts"
 }

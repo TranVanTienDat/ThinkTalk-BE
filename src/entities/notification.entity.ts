@@ -1,4 +1,10 @@
-import { Column, CreateDateColumn, Entity, ManyToOne } from 'typeorm';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+} from 'typeorm';
 import { BaseEntity } from '../common/entities/base.entity';
 import { Message } from './message.entity';
 import { User } from './user.entity';
@@ -22,8 +28,10 @@ export class Notification extends BaseEntity {
   read_at: Date;
 
   @ManyToOne(() => User, (user) => user.notifications)
+  @JoinColumn({ name: 'user_id' })
   user: User;
 
   @ManyToOne(() => Message, (m) => m.notifications)
+  @JoinColumn({ name: 'message_id' })
   message: Message;
 }
