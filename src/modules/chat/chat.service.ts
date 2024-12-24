@@ -1,101 +1,113 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { ChatMemberDto, CreateChatDto } from './dto/create-chat.dto';
-import { UpdateChatDto } from './dto/update-chat.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { Chat } from '../../entities/chat.entity';
 import { ChatMember, ChatRole } from '../../entities/chatMember.entity';
 import { User } from '../../entities/user.entity';
-import { Chat } from '../../entities/chat.entity';
+import { UsersService } from '../users/users.service';
+import { ChatMemberDto, CreateChatDto } from './dto/create-chat.dto';
+import { UpdateChatDto } from './dto/update-chat.dto';
+import { UserPayload } from '../auth/dto/user-payload.dto';
 
 @Injectable()
 export class ChatService {
   constructor(
     @InjectRepository(Chat)
-    private chatRepository: Repository<Chat>,
+    private chatRepo: Repository<Chat>,
     @InjectRepository(ChatMember)
-    private chatMemberRepository: Repository<ChatMember>,
+    private chatMemberRepo: Repository<ChatMember>,
+    private userService: UsersService,
   ) {}
 
-  async create(createChatDto: CreateChatDto) {
+  async createService(createChatDto: CreateChatDto) {
     const { name, type, chatMembers } = createChatDto;
 
-    const chat = this.chatRepository.create({
+    const chat = this.chatRepo.create({
       name,
       type,
       createdAt: new Date(),
     });
-    const savedChat = await this.chatRepository.save(chat);
+    const savedChat = await this.chatRepo.save(chat);
 
     const members = chatMembers.map((member: ChatMemberDto) => {
-      return this.chatMemberRepository.create({
-        user: { id: member.userId },
-        chat: savedChat,
-        role: member.role,
-        createdAt: new Date(),
-      });
+      const chatMember = new ChatMember();
+      chatMember.user = { id: member.userId } as User;
+      chatMember.chat = { id: savedChat.id } as Chat;
+      chatMember.role = member.role;
+      chatMember.createdAt = new Date();
+      return chatMember;
     });
 
-    await this.chatMemberRepository.save(members);
+    await this.chatMemberRepo.manager.transaction(async (manager) => {
+      await manager
+        .createQueryBuilder()
+        .insert()
+        .into(ChatMember)
+        .values(members)
+        .execute();
+    });
 
-    return this.chatRepository.findOne({
+    return await this.chatRepo.findOne({
       where: { id: savedChat.id },
-      relations: ['chatMembers'],
+      relations: {
+        chatMembers: true,
+      },
     });
   }
 
-  findAll() {
-    return `This action returns all chat`;
+  getChatByUserService(user: UserPayload) {
+    return this.chatMemberRepo.find({
+      where: { user },
+      relations: {
+        chat: true,
+      },
+      withDeleted: false,
+    });
   }
 
-  findOne(id: string) {
-    return `This action returns a #${id} chat`;
+  async getConverseService(id: string) {
+    return await this.chatRepo.findOne({
+      where: { id },
+      relations: {
+        chatMembers: true,
+      },
+      withDeleted: false,
+    });
   }
 
-  async update(id: string, updateChatDto: UpdateChatDto) {
-    const chat = await this.chatRepository.findOneBy({ id });
+  async updateService(id: string, updateChatDto: UpdateChatDto) {
+    return await this.chatRepo.update(id, { ...updateChatDto });
+  }
+
+  async removeChatService(id: string) {
+    const chat = await this.chatRepo.findOneBy({ id });
     if (!chat) {
       throw new NotFoundException('Chat not found');
     }
-    Object.assign(chat, updateChatDto);
-    const updatedChat = await this.chatRepository.save(chat);
-    return updatedChat;
+    return await this.chatRepo.softDelete(id);
   }
 
-  async remove(id: string) {
-    const chat = await this.chatRepository.findOneBy({ id });
-    if (!chat) {
-      throw new NotFoundException('Chat not found');
-    }
-    const updatedChat = await this.chatRepository.delete(chat);
-    return updatedChat;
-  }
-
-  async addMembersToChat(
-    userIds: string[],
-    chatId: string,
-    role: ChatRole = ChatRole.MEMBER,
-  ) {
-    const chat = await this.chatRepository.findOneBy({ id: chatId });
+  async addMembersService(userIds: string[], chatId: string) {
+    const chat = await this.chatRepo.findOneBy({ id: chatId });
 
     if (!chat) {
       throw new Error('Chat not found');
     }
 
     const chatMembers = userIds.map((userId) => {
-      const chatMember = this.chatMemberRepository.create({
+      const chatMember = this.chatMemberRepo.create({
         user: { id: userId } as User,
         chat,
-        role,
+        role: ChatRole.MEMBER,
       });
       return chatMember;
     });
-    console.log('chatMembers', chatMembers);
 
-    return await this.chatMemberRepository.save(chatMembers);
+    return await this.chatMemberRepo.save(chatMembers);
   }
 
-  async removeMemberFromChat(userId: string, chatId: string) {
-    const chatMember = await this.chatMemberRepository.findOne({
+  async removeMemberService(userId: string, chatId: string) {
+    const chatMember = await this.chatMemberRepo.findOne({
       where: { user: { id: userId }, chat: { id: chatId } },
     });
 
@@ -103,6 +115,13 @@ export class ChatService {
       throw new Error('Chat member not found');
     }
 
-    return await this.chatMemberRepository.remove(chatMember);
+    return await this.chatMemberRepo.remove(chatMember);
+  }
+  async isAdminChat(userId: string, chatId: string) {
+    const chatMember = await this.chatMemberRepo.findOne({
+      where: { user: { id: userId }, chat: { id: chatId } },
+    });
+
+    return chatMember?.role === ChatRole.ADMIN;
   }
 }

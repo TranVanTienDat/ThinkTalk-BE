@@ -3,27 +3,21 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
-  OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { Device } from './devices.entity';
 import { User } from './user.entity';
 
-@Entity({ name: 'session' })
+@Entity({ name: 'access' })
 export class Access {
-  @ManyToOne(() => User, (user) => user.devices)
+  @ManyToOne(() => User, (user) => user.access)
   @JoinColumn({ name: 'user_id' })
   user: User;
 
-  @OneToOne(() => Device, (d) => d.access)
-  @JoinColumn({ name: 'devices_id' })
-  devices: Device;
-
   @PrimaryGeneratedColumn()
-  id: number;
+  id: string;
 
   @Column({ name: 'refresh_token', nullable: true, default: null })
-  token: string;
+  refreshToken: string;
 
   @Column()
   expires_at: Date;

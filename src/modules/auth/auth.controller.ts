@@ -1,21 +1,37 @@
-import { Body, Controller, Post } from '@nestjs/common';
-import { AuthService } from './auth.service';
-import { authDto } from './dto/auth.dto';
-import { LoginDto } from './dto/login.dto';
+import { Body, Controller, HttpStatus, Post } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { Public } from '../../common/decorators/public.decorator';
+import { AuthService } from './auth.service';
+import { AuthDto, LoginDto } from './dto/auth.dto';
+import { UserData } from './dto/user-data.dto';
+import { UserAuth } from '../../common/decorators/auth-user.decorator';
+import { UserPayload } from './dto/user-payload.dto';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Public()
+  @ApiOperation({ summary: 'Register' })
+  @ApiResponse({ status: HttpStatus.CREATED, type: UserData })
   @Post('register')
-  async register(@Body() userData: authDto): Promise<any> {
+  async register(@Body() userData: AuthDto): Promise<any> {
     return this.authService.register(userData);
   }
   @Public()
+  @ApiOperation({ summary: 'Login' })
+  @ApiResponse({ status: HttpStatus.OK, type: UserData })
   @Post('login')
   async login(@Body() userData: LoginDto): Promise<any> {
     return this.authService.login(userData);
+  }
+
+  @ApiOperation({ summary: 'Logout' })
+  @ApiResponse({ status: HttpStatus.OK })
+  @ApiBearerAuth()
+  @Post('logout')
+  async logout(@UserAuth() userData: UserPayload): Promise<void> {
+    console.log('log', userData);
+    return this.authService.logoutService(userData);
   }
 }
