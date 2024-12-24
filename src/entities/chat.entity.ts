@@ -18,7 +18,7 @@ export class Chat extends BaseEntity {
   })
   type: ChatStatus;
 
-  @Column({ name: 'avatar', nullable: false, default: null })
+  @Column({ name: 'avatar', nullable: true, default: null })
   avatar: string;
 
   @OneToMany(() => Message, (m) => m.chat, { onDelete: 'CASCADE' })

@@ -4,7 +4,8 @@ import { ChatMember } from './chatMember.entity';
 import { Message } from './message.entity';
 import { MessageStatus } from './messageStatus.entity';
 import { Notification } from './notification.entity';
-import { Device } from './devices.entity';
+import { Device } from './device.entity';
+import { Access } from './access.entity';
 export enum UserStatus {
   ON = 'online',
   OFF = 'offline',
@@ -43,6 +44,9 @@ export class User extends BaseEntity {
   @OneToMany(() => MessageStatus, (ms) => ms.user)
   messageStatus: MessageStatus[];
 
-  @OneToMany(() => Device, (d) => d.user)
+  @OneToMany(() => Access, (a) => a.user, { cascade: true })
+  access: Access[];
+
+  @OneToMany(() => Device, (d) => d.user, { cascade: true })
   devices: Device[];
 }
