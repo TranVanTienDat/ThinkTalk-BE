@@ -12,6 +12,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { AuthGuard } from './common/guard/jwt-auth.guard';
 import { AccessModule } from './modules/access/access.module';
 import { DeviceModule } from './modules/device/device.module';
+import { SeedModule } from './modules/seed/seed.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { DeviceModule } from './modules/device/device.module';
     ChatModule,
     AccessModule,
     DeviceModule,
+    SeedModule,
   ],
   controllers: [AppController],
   providers: [
