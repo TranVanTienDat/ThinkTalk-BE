@@ -1,7 +1,7 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { IsEnum, IsInt, IsOptional, Max, Min } from 'class-validator';
-import { Constant, Order } from '../utils';
+import { Constant, Order } from '../utils/constant.util';
 
 export class PageDto {
   @ApiPropertyOptional({
@@ -38,7 +38,7 @@ export class PageDto {
     return (this.page - 1) * this.limit;
   }
 
-  constructor(order: Order, page: number, limit: number){
+  constructor(order: Order, page: number, limit: number) {
     this.order = order;
     this.page = page;
     this.limit = limit;
