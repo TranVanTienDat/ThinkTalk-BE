@@ -35,9 +35,9 @@ async function bootstrap() {
     createSwagger(app);
   }
   app.enableCors({
-    origin: '*',
-    methods: 'GET, PUT, POST, DELETE',
-    allowedHeaders: 'Content-Type, Authorization',
+    credentials: true,
+    origin: 'http://localhost:3000',
+    methods: 'GET,POST,PUT,DELETE',
   });
 
   app.useGlobalPipes(new ValidationPipe());
