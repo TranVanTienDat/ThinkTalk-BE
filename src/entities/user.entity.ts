@@ -1,11 +1,10 @@
 import { Column, Entity, OneToMany } from 'typeorm';
 import { BaseEntity } from '../common/entities/base.entity';
-import { ChatMember } from './chatMember.entity';
-import { Message } from './message.entity';
-import { MessageStatus } from './messageStatus.entity';
-import { Notification } from './notification.entity';
-import { Device } from './device.entity';
 import { Access } from './access.entity';
+import { ChatMember } from './chatMember.entity';
+import { Device } from './device.entity';
+import { Message } from './message.entity';
+import { Notification } from './notification.entity';
 export enum UserStatus {
   ON = 'online',
   OFF = 'offline',
@@ -40,9 +39,6 @@ export class User extends BaseEntity {
 
   @OneToMany(() => Notification, (notification) => notification.user)
   notifications: Notification[];
-
-  @OneToMany(() => MessageStatus, (ms) => ms.user)
-  messageStatus: MessageStatus[];
 
   @OneToMany(() => Access, (a) => a.user, { cascade: true })
   access: Access[];

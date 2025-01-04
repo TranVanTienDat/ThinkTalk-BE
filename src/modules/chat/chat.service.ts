@@ -124,4 +124,9 @@ export class ChatService {
 
     return chatMember?.role === ChatRole.ADMIN;
   }
+  async findService(id: string) {
+    return await this.chatRepo.findOne({
+      where: { id },
+    });
+  }
 }

@@ -3,6 +3,7 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { Message } from './message.entity';
@@ -20,7 +21,7 @@ export class Attachment {
   @Column({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
   uploaded_at: Date;
 
-  @ManyToOne(() => Message, (m) => m.attachments)
+  @OneToOne(() => Message)
   @JoinColumn({ name: 'message_id' })
   message: Message;
 }

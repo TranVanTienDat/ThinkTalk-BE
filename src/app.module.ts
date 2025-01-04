@@ -13,6 +13,7 @@ import { AuthGuard } from './common/guard/jwt-auth.guard';
 import { AccessModule } from './modules/access/access.module';
 import { DeviceModule } from './modules/device/device.module';
 import { SeedModule } from './modules/seed/seed.module';
+import { MessageModule } from './modules/message/message.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { SeedModule } from './modules/seed/seed.module';
     AccessModule,
     DeviceModule,
     SeedModule,
+    MessageModule,
   ],
   controllers: [AppController],
   providers: [
