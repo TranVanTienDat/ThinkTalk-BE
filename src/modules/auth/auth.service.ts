@@ -95,7 +95,7 @@ export class AuthService {
       (device) => device.device_token === device_token,
     );
     if (!device) {
-      throw new BadGatewayException('Not found device');
+      throw new NotFoundException('Not found device');
     }
 
     await this.accessService.updateService(device.access.id, { refreshToken });

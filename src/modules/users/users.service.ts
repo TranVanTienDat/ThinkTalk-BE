@@ -1,4 +1,8 @@
-import { BadGatewayException, Injectable } from '@nestjs/common';
+import {
+  BadGatewayException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 
 import { Repository } from 'typeorm';
@@ -48,7 +52,7 @@ export class UsersService {
     });
 
     if (!user) {
-      throw new BadGatewayException('Not found user');
+      throw new NotFoundException('Not found user');
     }
     if (user.password) {
       const isMatch = await verifyPassword(value.password, user.password);
