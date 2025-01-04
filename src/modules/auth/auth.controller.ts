@@ -31,7 +31,14 @@ export class AuthController {
   @ApiBearerAuth()
   @Post('logout')
   async logout(@UserAuth() userData: UserPayload): Promise<void> {
-    console.log('log', userData);
     return this.authService.logoutService(userData);
+  }
+
+  @ApiOperation({ summary: 'Get me' })
+  @ApiResponse({ status: HttpStatus.OK, type: UserData })
+  @ApiBearerAuth()
+  @Post('get-me')
+  async getMe(@UserAuth() userData: UserPayload) {
+    return this.authService.getMe(userData);
   }
 }

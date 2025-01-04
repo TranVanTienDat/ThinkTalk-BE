@@ -116,6 +116,16 @@ export class AuthService {
     await this.userRepo.update(user.id, { status: UserStatus.OFF });
   }
 
+  async getMe(user: UserPayload) {
+    const userExists = await this.userService.findUserByIdService(user.id);
+
+    if (!userExists) {
+      throw new NotFoundException('User not found');
+    }
+
+    return plainToInstance(UserData, userExists);
+  }
+
   public async generateAccessToken(user: UserPayload): Promise<string> {
     const payload = {
       id: user.id,
