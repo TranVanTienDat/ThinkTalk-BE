@@ -1,0 +1,33 @@
+"use strict";
+/*
+ * ATTENTION: The "eval" devtool has been used (maybe by default in mode: "development").
+ * This devtool is neither made for production nor for readable output files.
+ * It uses "eval()" calls to create a separate source file in the browser devtools.
+ * If you are trying to read the output file, select a different devtool (https://webpack.js.org/configuration/devtool/)
+ * or disable the default devtool with "devtool: false".
+ * If you are looking for production-ready output files, see mode: "production" (https://webpack.js.org/configuration/mode/).
+ */
+exports.id = "main";
+exports.ids = null;
+exports.modules = {
+
+/***/ "./src/modules/auth/auth.service.ts":
+/*!******************************************!*\
+  !*** ./src/modules/auth/auth.service.ts ***!
+  \******************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+eval("\nvar __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {\n    if (k2 === undefined) k2 = k;\n    var desc = Object.getOwnPropertyDescriptor(m, k);\n    if (!desc || (\"get\" in desc ? !m.__esModule : desc.writable || desc.configurable)) {\n      desc = { enumerable: true, get: function() { return m[k]; } };\n    }\n    Object.defineProperty(o, k2, desc);\n}) : (function(o, m, k, k2) {\n    if (k2 === undefined) k2 = k;\n    o[k2] = m[k];\n}));\nvar __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {\n    Object.defineProperty(o, \"default\", { enumerable: true, value: v });\n}) : function(o, v) {\n    o[\"default\"] = v;\n});\nvar __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {\n    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;\n    if (typeof Reflect === \"object\" && typeof Reflect.decorate === \"function\") r = Reflect.decorate(decorators, target, key, desc);\n    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;\n    return c > 3 && r && Object.defineProperty(target, key, r), r;\n};\nvar __importStar = (this && this.__importStar) || function (mod) {\n    if (mod && mod.__esModule) return mod;\n    var result = {};\n    if (mod != null) for (var k in mod) if (k !== \"default\" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);\n    __setModuleDefault(result, mod);\n    return result;\n};\nvar __metadata = (this && this.__metadata) || function (k, v) {\n    if (typeof Reflect === \"object\" && typeof Reflect.metadata === \"function\") return Reflect.metadata(k, v);\n};\nvar __param = (this && this.__param) || function (paramIndex, decorator) {\n    return function (target, key) { decorator(target, key, paramIndex); }\n};\nObject.defineProperty(exports, \"__esModule\", ({ value: true }));\nexports.AuthService = void 0;\nconst common_1 = __webpack_require__(/*! @nestjs/common */ \"@nestjs/common\");\nconst typeorm_1 = __webpack_require__(/*! @nestjs/typeorm */ \"@nestjs/typeorm\");\nconst jwt_1 = __webpack_require__(/*! @nestjs/jwt */ \"@nestjs/jwt\");\nconst bcrypt = __importStar(__webpack_require__(/*! bcrypt */ \"bcrypt\"));\nconst config_1 = __webpack_require__(/*! @nestjs/config */ \"@nestjs/config\");\nconst typeorm_2 = __webpack_require__(/*! typeorm */ \"typeorm\");\nconst user_entity_1 = __webpack_require__(/*! ../../entities/user.entity */ \"./src/entities/user.entity.ts\");\nlet AuthService = class AuthService {\n    constructor(userRepository, jwtService, configService) {\n        this.userRepository = userRepository;\n        this.jwtService = jwtService;\n        this.configService = configService;\n    }\n    async register(registerDto) {\n        const { email, password, fullName } = registerDto;\n        const user = await this.userRepository.findOne({\n            where: { email },\n        });\n        if (user) {\n            throw new common_1.BadRequestException('Email has existed!');\n        }\n        const hashedPassword = await bcrypt.hash(password, 10);\n        const newUser = this.userRepository.create({\n            email,\n            password: hashedPassword,\n            fullName,\n        });\n        await this.userRepository.save(newUser);\n        const payload = { email: newUser.email, sub: newUser.id };\n        const secret = this.configService.get('JWT_SECRET');\n        const accessToken = await this.jwtService.signAsync(payload, {\n            secret,\n        });\n        const { password: hashed, createdAt, updatedAt, ...result } = newUser;\n        return {\n            statusCode: 200,\n            message: 'Register successfully !',\n            ...result,\n            accessToken,\n        };\n    }\n    async login(loginDto) {\n        const { email, password } = loginDto;\n        const user = await this.userRepository.findOne({\n            where: { email },\n        });\n        if (!user) {\n            throw new common_1.BadRequestException('Username is incorrect!');\n        }\n        if (!bcrypt.compare(password, user.password))\n            throw new common_1.BadRequestException('Password is incorrect!');\n        const payload = { email: user.email, sub: user.id };\n        const secret = this.configService.get('JWT_SECRET');\n        const accessToken = await this.jwtService.signAsync(payload, {\n            secret,\n        });\n        const { password: hashed, createdAt, updatedAt, ...result } = user;\n        return {\n            statusCode: 200,\n            message: 'Login successfully !',\n            ...result,\n            accessToken,\n        };\n    }\n};\nexports.AuthService = AuthService;\nexports.AuthService = AuthService = __decorate([\n    (0, common_1.Injectable)(),\n    __param(0, (0, typeorm_1.InjectRepository)(user_entity_1.User)),\n    __metadata(\"design:paramtypes\", [typeorm_2.Repository,\n        jwt_1.JwtService,\n        config_1.ConfigService])\n], AuthService);\n\n\n//# sourceURL=webpack://learn-project/./src/modules/auth/auth.service.ts?");
+
+/***/ })
+
+};
+exports.runtime =
+/******/ function(__webpack_require__) { // webpackRuntimeModules
+/******/ /* webpack/runtime/getFullHash */
+/******/ (() => {
+/******/ 	__webpack_require__.h = () => ("21f9692e0a0a2052dd00")
+/******/ })();
+/******/ 
+/******/ }
+;
