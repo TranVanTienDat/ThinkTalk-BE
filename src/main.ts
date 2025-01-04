@@ -34,7 +34,11 @@ async function bootstrap() {
   if (!process.env.SWAGGER_ENABLE || process.env.SWAGGER_ENABLE === '1') {
     createSwagger(app);
   }
-  app.enableCors({ origin: '*' });
+  app.enableCors({
+    origin: '*',
+    methods: 'GET, PUT, POST, DELETE',
+    allowedHeaders: 'Content-Type, Authorization',
+  });
 
   app.useGlobalPipes(new ValidationPipe());
   useContainer(app.select(AppModule), { fallbackOnErrors: true });
