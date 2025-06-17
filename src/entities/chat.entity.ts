@@ -21,6 +21,14 @@ export class Chat extends BaseEntity {
   @Column({ name: 'avatar', nullable: true, default: null })
   avatar: string;
 
+  @Column('text', {
+    name: 'user_ids',
+    nullable: true,
+    default: [],
+    array: true,
+  })
+  userIds: string[];
+
   @OneToMany(() => Message, (m) => m.chat, { onDelete: 'CASCADE' })
   messages: Message[];
 

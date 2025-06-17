@@ -8,6 +8,10 @@ import { UsersService } from '../users/users.service';
 import { ChatMemberDto, CreateChatDto } from './dto/create-chat.dto';
 import { UpdateChatDto } from './dto/update-chat.dto';
 import { UserPayload } from '../auth/dto/user-payload.dto';
+import { ChatFilter } from './dto/chat.filter';
+import { PageMetaDto } from '../../common/dto';
+import { ResponsePageDto } from '../../common/dto/response-page.dto';
+import { plainToInstance } from 'class-transformer';
 
 @Injectable()
 export class ChatService {
@@ -25,6 +29,7 @@ export class ChatService {
     const chat = this.chatRepo.create({
       name,
       type,
+      userIds: chatMembers.map((chatMember) => chatMember.userId),
       createdAt: new Date(),
     });
     const savedChat = await this.chatRepo.save(chat);
@@ -55,9 +60,39 @@ export class ChatService {
     });
   }
 
-  getChatByUserService(user: UserPayload) {
-    return this.chatMemberRepo.find({
-      where: { user },
+  async findAllService(filter: ChatFilter, id: string) {
+    const queryBuilder = this.chatRepo.createQueryBuilder('chat');
+    if (filter.search) {
+      queryBuilder.andWhere('LOWER(chat.name) LIKE LOWER(:search)', {
+        search: `%${filter.search}%`,
+      });
+    }
+    // if (id) {
+    //   queryBuilder.andWhere('LOWER(chat.) LIKE LOWER(:search)', {
+    //     search: `%${filter.i}%`,
+    //   });
+    // }
+
+    const [chats, chatCount] = await queryBuilder
+      .orderBy(`object_configs.${filter.orderBy}`, filter.order)
+      .skip(filter.skip)
+      .take(filter.limit)
+      .setFindOptions({ withDeleted: false })
+      .getManyAndCount();
+
+    const pageMetaDto = new PageMetaDto({
+      pageDto: filter.pageDto,
+      total: chatCount,
+    });
+    return new ResponsePageDto(
+      chats.map((e) => plainToInstance(Chat, e)),
+      pageMetaDto,
+    );
+  }
+
+  async getChatByUserService(user: UserPayload) {
+    return await this.chatMemberRepo.find({
+      where: { user: { id: user.id } },
       relations: {
         chat: true,
       },
@@ -87,23 +122,27 @@ export class ChatService {
     return await this.chatRepo.softDelete(id);
   }
 
-  async addMembersService(userIds: string[], chatId: string) {
+  async addMembersService(users: string[], chatId: string) {
     const chat = await this.chatRepo.findOneBy({ id: chatId });
 
     if (!chat) {
-      throw new Error('Chat not found');
+      throw new NotFoundException('Chat not found');
     }
 
-    const chatMembers = userIds.map((userId) => {
-      const chatMember = this.chatMemberRepo.create({
-        user: { id: userId } as User,
-        chat,
-        role: ChatRole.MEMBER,
-      });
-      return chatMember;
-    });
+    await this.chatMemberRepo.manager.transaction(async (manager) => {
+      chat.userIds = [...chat.userIds, ...users];
+      await manager.save(chat);
 
-    return await this.chatMemberRepo.save(chatMembers);
+      const chatMembers = users.map((userId) => {
+        return manager.create(this.chatMemberRepo.target, {
+          user: { id: userId } as User,
+          chat,
+          role: ChatRole.MEMBER,
+        });
+      });
+
+      await manager.save(this.chatMemberRepo.target, chatMembers);
+    });
   }
 
   async removeMemberService(userId: string, chatId: string) {
@@ -115,7 +154,14 @@ export class ChatService {
       throw new Error('Chat member not found');
     }
 
-    return await this.chatMemberRepo.remove(chatMember);
+    const chat = await this.getConverseService(chatId);
+
+    await this.chatMemberRepo.manager.transaction(async (manager) => {
+      chat.userIds = chat.userIds.filter((item) => item !== userId);
+      await this.chatRepo.update(chat.id, { userIds: chat.userIds });
+
+      await this.chatMemberRepo.remove(chatMember);
+    });
   }
   async isAdminChat(userId: string, chatId: string) {
     const chatMember = await this.chatMemberRepo.findOne({
