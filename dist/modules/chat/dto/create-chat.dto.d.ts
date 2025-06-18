@@ -1,4 +1,5 @@
-import { ChatRole, ChatStatus } from '../../../entities/chatMember.entity';
+import { ChatRole } from '../../../entities/chatMember.entity';
+import { ChatStatus } from '../../../entities/chat.entity';
 export declare class ChatMemberDto {
     userId: string;
     role: ChatRole;

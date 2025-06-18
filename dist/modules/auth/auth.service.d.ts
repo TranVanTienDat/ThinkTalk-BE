@@ -1,46 +1,30 @@
-import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import { authDto } from './dto/auth.dto';
 import { Repository } from 'typeorm';
 import { User } from '../../entities/user.entity';
-import { LoginDto } from './dto/login.dto';
+import { AccessService } from '../access/access.service';
+import { UsersService } from '../users/users.service';
+import { AuthDto, LoginDto } from './dto/auth.dto';
+import { UserData } from './dto/user-data.dto';
+import { UserPayload } from './dto/user-payload.dto';
 export declare class AuthService {
-    private userRepository;
-    private readonly jwtService;
+    private userRepo;
+    private readonly userService;
+    private readonly accessService;
     private readonly configService;
-    constructor(userRepository: Repository<User>, jwtService: JwtService, configService: ConfigService);
-    register(registerDto: authDto): Promise<{
-        accessToken: string;
-        email: string;
-        fullName: string;
-        nickname: string;
-        avatar: string;
-        status: import("../../entities/user.entity").UserStatus;
-        messages: import("../../entities").Message[];
-        chatMembers: import("../../entities/chatMember.entity").ChatMember[];
-        notifications: import("../../entities/notification.entity").Notification[];
-        messageStatus: import("../../entities/messageStatus.entity").MessageStatus[];
-        devices: import("../../entities/devices.entity").Device[];
-        id: string;
-        deletedAt: Date;
+    constructor(userRepo: Repository<User>, userService: UsersService, accessService: AccessService, configService: ConfigService);
+    register(registerDto: AuthDto): Promise<{
         statusCode: number;
         message: string;
+        user: UserData;
     }>;
-    login(loginDto: LoginDto): Promise<{
-        accessToken: string;
-        email: string;
-        fullName: string;
-        nickname: string;
-        avatar: string;
-        status: import("../../entities/user.entity").UserStatus;
-        messages: import("../../entities").Message[];
-        chatMembers: import("../../entities/chatMember.entity").ChatMember[];
-        notifications: import("../../entities/notification.entity").Notification[];
-        messageStatus: import("../../entities/messageStatus.entity").MessageStatus[];
-        devices: import("../../entities/devices.entity").Device[];
-        id: string;
-        deletedAt: Date;
+    login(userPayLoad: LoginDto): Promise<{
         statusCode: number;
         message: string;
+        user: UserData;
     }>;
+    logoutService(user: UserPayload): Promise<void>;
+    getMe(user: UserPayload): Promise<UserData>;
+    generateAccessToken(user: UserPayload): Promise<string>;
+    generateRefreshToken(user: UserPayload): Promise<string>;
+    refreshToken(user: UserPayload): Promise<void>;
 }

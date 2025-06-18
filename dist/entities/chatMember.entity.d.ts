@@ -1,10 +1,6 @@
 import { BaseEntity } from '../common/entities/base.entity';
 import { Chat } from './chat.entity';
 import { User } from './user.entity';
-export declare enum ChatStatus {
-    Pr = "private",
-    Gr = "group"
-}
 export declare enum ChatRole {
     ADMIN = "admin",
     MEMBER = "member"

@@ -3,7 +3,8 @@ import { ChatMember } from './chatMember.entity';
 import { Message } from './message.entity';
 import { MessageStatus } from './messageStatus.entity';
 import { Notification } from './notification.entity';
-import { Device } from './devices.entity';
+import { Device } from './device.entity';
+import { Access } from './access.entity';
 export declare enum UserStatus {
     ON = "online",
     OFF = "offline"
@@ -19,5 +20,6 @@ export declare class User extends BaseEntity {
     chatMembers: ChatMember[];
     notifications: Notification[];
     messageStatus: MessageStatus[];
+    access: Access[];
     devices: Device[];
 }

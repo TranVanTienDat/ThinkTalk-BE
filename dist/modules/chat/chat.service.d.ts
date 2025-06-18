@@ -1,17 +1,21 @@
+import { Repository } from 'typeorm';
+import { Chat } from '../../entities/chat.entity';
+import { ChatMember } from '../../entities/chatMember.entity';
+import { UsersService } from '../users/users.service';
 import { CreateChatDto } from './dto/create-chat.dto';
 import { UpdateChatDto } from './dto/update-chat.dto';
-import { Repository } from 'typeorm';
-import { ChatMember, ChatRole } from '../../entities/chatMember.entity';
-import { Chat } from '../../entities/chat.entity';
+import { UserPayload } from '../auth/dto/user-payload.dto';
 export declare class ChatService {
-    private chatRepository;
-    private chatMemberRepository;
-    constructor(chatRepository: Repository<Chat>, chatMemberRepository: Repository<ChatMember>);
-    create(createChatDto: CreateChatDto): Promise<Chat>;
-    findAll(): string;
-    findOne(id: string): string;
-    update(id: string, updateChatDto: UpdateChatDto): Promise<Chat>;
-    remove(id: string): Promise<import("typeorm").DeleteResult>;
-    addMembersToChat(userIds: string[], chatId: string, role?: ChatRole): Promise<ChatMember[]>;
-    removeMemberFromChat(userId: string, chatId: string): Promise<ChatMember>;
+    private chatRepo;
+    private chatMemberRepo;
+    private userService;
+    constructor(chatRepo: Repository<Chat>, chatMemberRepo: Repository<ChatMember>, userService: UsersService);
+    createService(createChatDto: CreateChatDto): Promise<Chat>;
+    getChatByUserService(user: UserPayload): Promise<ChatMember[]>;
+    getConverseService(id: string): Promise<Chat>;
+    updateService(id: string, updateChatDto: UpdateChatDto): Promise<import("typeorm").UpdateResult>;
+    removeChatService(id: string): Promise<import("typeorm").UpdateResult>;
+    addMembersService(userIds: string[], chatId: string): Promise<ChatMember[]>;
+    removeMemberService(userId: string, chatId: string): Promise<ChatMember>;
+    isAdminChat(userId: string, chatId: string): Promise<boolean>;
 }
