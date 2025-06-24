@@ -139,7 +139,9 @@ export class AuthService {
 
     const options: jwt.SignOptions = {
       algorithm: 'HS256',
-      expiresIn: this.configService.get<string>('JWT_ACCESS_EXPIRATION_TIME'),
+      expiresIn: this.configService.get<string>(
+        'JWT_ACCESS_EXPIRATION_TIME',
+      ) as any,
     };
 
     const token = jwt.sign(payload, secret, options);
@@ -160,7 +162,9 @@ export class AuthService {
 
     const options: jwt.SignOptions = {
       algorithm: 'HS256',
-      expiresIn: this.configService.get<string>('JWT_REFRESH_EXPIRATION_TIME'),
+      expiresIn: this.configService.get<string>(
+        'JWT_REFRESH_EXPIRATION_TIME',
+      ) as any,
     };
 
     const token = jwt.sign(payload, secret, options);

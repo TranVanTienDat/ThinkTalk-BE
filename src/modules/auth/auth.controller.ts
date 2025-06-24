@@ -1,4 +1,4 @@
-import { Body, Controller, HttpStatus, Post } from '@nestjs/common';
+import { Body, Controller, Get, HttpStatus, Post } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { Public } from '../../common/decorators/public.decorator';
 import { AuthService } from './auth.service';
@@ -37,7 +37,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Get me' })
   @ApiResponse({ status: HttpStatus.OK, type: UserData })
   @ApiBearerAuth()
-  @Post('get-me')
+  @Get('get-me')
   async getMe(@UserAuth() userData: UserPayload) {
     return this.authService.getMe(userData);
   }
