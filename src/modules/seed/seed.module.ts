@@ -7,9 +7,14 @@ import { SeedController } from './seed.controller';
 import { SeedService } from './seed.service';
 import { AuthService } from '../auth/auth.service';
 import { AuthModule } from '../auth/auth.module';
+import { ChatModule } from '../chat/chat.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User, Chat, ChatMember]), AuthModule],
+  imports: [
+    TypeOrmModule.forFeature([User, Chat, ChatMember]),
+    AuthModule,
+    ChatModule,
+  ],
   controllers: [SeedController],
   providers: [SeedService],
 })

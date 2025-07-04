@@ -9,11 +9,6 @@ export enum StatusMessage {
 }
 @Entity({ name: 'messageStatus' })
 export class MessageStatus extends BaseEntity {
-  @Column({ name: 'message_id' })
-  message_id: number;
-  @Column({ name: 'user_id' })
-  user_id: number;
-
   @Column({
     type: 'enum',
     enum: StatusMessage,

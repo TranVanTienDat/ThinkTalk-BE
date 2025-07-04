@@ -13,7 +13,7 @@ export class Access {
   @JoinColumn({ name: 'user_id' })
   user: User;
 
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn('uuid')
   id: string;
 
   @Column({ name: 'refresh_token', nullable: true, default: null })

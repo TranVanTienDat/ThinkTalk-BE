@@ -1,8 +1,9 @@
-import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
-import { useContainer } from 'class-validator';
+import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { useContainer } from 'class-validator';
+import { AppModule } from './app.module';
+import { RedisIoAdapter } from './common/adapter/redis.adapter';
 
 const SWAGGER_TITLE = 'Chat app API';
 const SWAGGER_DESCRIPTION = 'API used for Chat app management';
@@ -29,16 +30,24 @@ function createSwagger(app: INestApplication) {
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  app.setGlobalPrefix('/api/v1/');
 
+  app.setGlobalPrefix('/api/v1/');
   if (!process.env.SWAGGER_ENABLE || process.env.SWAGGER_ENABLE === '1') {
     createSwagger(app);
   }
   app.enableCors({ origin: '*' });
-
   app.useGlobalPipes(new ValidationPipe());
   useContainer(app.select(AppModule), { fallbackOnErrors: true });
 
-  await app.listen(process.env.APP_PORT || 3000);
+  // Create Redis IoAdapter for WebSocket support
+  const redisIoAdapter = new RedisIoAdapter(app);
+  try {
+    await redisIoAdapter.connectToRedis();
+    app.useWebSocketAdapter(redisIoAdapter);
+  } catch (error) {
+    console.error('❌ Redis connection failed:', error);
+  }
+
+  await app.listen(process.env.APP_PORT || 5000);
 }
 bootstrap();

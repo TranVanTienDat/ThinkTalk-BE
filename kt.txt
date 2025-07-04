@@ -1,0 +1,43 @@
+Chat App Architecture Documentation
+1. Core Chat Features
+📬 Messaging Core
+Send & receive messages (text, files, images, emoji)
+Message status (sent, delivered, seen)
+Draft messages / auto-save
+Edit / recall messages
+Reactions (❤️ 😆 👍)
+Reply / Forward
+👥 User & Group Management
+Online/offline status
+Typing indicators
+Group creation and member management
+Group roles (admin, member)
+Group avatar and name customization
+Pin groups/messages
+🔔 Notifications
+New message notifications
+Group membership notifications
+Push notifications (Firebase/APNs)
+📞 Call Features
+Voice/video calls (WebRTC)
+WebSocket signaling
+Group/individual calls
+Call status tracking
+📤 Media & File Handling
+File, image, video sharing
+In-chat image preview
+Group/user media organization
+🔐 Security Features
+Optional end-to-end encryption
+User blocking
+Conversation hiding
+2FA/OTP authentication
+2. High-Level Architecture
+3. Multi-Cluster WebSocket Architecture
+Configuration Example
+Message Flow
+4. Message Queue Layer Structure
+Layer	Technology	Function
+WebSocket Layer	Redis Pub/Sub	Message handling, typing status
+Event Queue	RabbitMQ / Kafka	DB persistence, async processing
+Notification Queue	Redis Stream	Push notifications, email/SMS delivery
