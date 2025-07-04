@@ -34,7 +34,7 @@ export class CreateChatDto {
   type: ChatStatus = ChatStatus.Pr;
 
   @ApiProperty({
-    description: 'avatar',
+    description: 'Members',
     example: [{ userId: '123', role: 'member' }],
   })
   @IsArray()

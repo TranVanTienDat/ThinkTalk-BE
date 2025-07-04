@@ -9,7 +9,7 @@ import { Message } from './message.entity';
 
 @Entity({ name: 'attachment' })
 export class Attachment {
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn('uuid')
   id: number;
 
   @Column()

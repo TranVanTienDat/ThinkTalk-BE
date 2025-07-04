@@ -1,17 +1,20 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { plainToInstance } from 'class-transformer';
+import { MessageType } from 'src/entities/message.entity';
 import { Repository } from 'typeorm';
+import { PageMetaDto } from '../../common/dto';
+import { ResponsePageDto } from '../../common/dto/response-page.dto';
 import { Chat } from '../../entities/chat.entity';
 import { ChatMember, ChatRole } from '../../entities/chatMember.entity';
 import { User } from '../../entities/user.entity';
+import { UserPayload } from '../auth/dto/user-payload.dto';
+import { MessageService } from '../message/message.service';
 import { UsersService } from '../users/users.service';
+import { ChatFilter } from './dto/chat.filter';
 import { ChatMemberDto, CreateChatDto } from './dto/create-chat.dto';
 import { UpdateChatDto } from './dto/update-chat.dto';
-import { UserPayload } from '../auth/dto/user-payload.dto';
-import { ChatFilter } from './dto/chat.filter';
-import { PageMetaDto } from '../../common/dto';
-import { ResponsePageDto } from '../../common/dto/response-page.dto';
-import { plainToInstance } from 'class-transformer';
+import { StatusMessage } from 'src/entities/messageStatus.entity';
 
 @Injectable()
 export class ChatService {
@@ -21,42 +24,50 @@ export class ChatService {
     @InjectRepository(ChatMember)
     private chatMemberRepo: Repository<ChatMember>,
     private userService: UsersService,
+    private messageService: MessageService,
   ) {}
 
   async createService(createChatDto: CreateChatDto) {
     const { name, type, chatMembers } = createChatDto;
 
-    const chat = this.chatRepo.create({
-      name,
-      type,
-      userIds: chatMembers.map((chatMember) => chatMember.userId),
-      createdAt: new Date(),
-    });
-    const savedChat = await this.chatRepo.save(chat);
+    return await this.chatRepo.manager.transaction(async (manager) => {
+      const chat = this.chatRepo.create({
+        name,
+        type,
+        userIds: chatMembers.map((chatMember) => chatMember.userId),
+        createdAt: new Date(),
+      });
+      const savedChat = await manager.save(chat);
 
-    const members = chatMembers.map((member: ChatMemberDto) => {
-      const chatMember = new ChatMember();
-      chatMember.user = { id: member.userId } as User;
-      chatMember.chat = { id: savedChat.id } as Chat;
-      chatMember.role = member.role;
-      chatMember.createdAt = new Date();
-      return chatMember;
-    });
+      const members = chatMembers.map((member: ChatMemberDto) => {
+        const chatMember = new ChatMember();
+        chatMember.user = { id: member.userId } as User;
+        chatMember.chat = { id: savedChat.id } as Chat;
+        chatMember.role = member.role;
+        chatMember.createdAt = new Date();
+        return chatMember;
+      });
+      await manager.insert(ChatMember, members);
 
-    await this.chatMemberRepo.manager.transaction(async (manager) => {
-      await manager
-        .createQueryBuilder()
-        .insert()
-        .into(ChatMember)
-        .values(members)
-        .execute();
-    });
+      const userAdmin = chatMembers.filter(
+        (member) => member.role === ChatRole.ADMIN,
+      )[0];
 
-    return await this.chatRepo.findOne({
-      where: { id: savedChat.id },
-      relations: {
-        chatMembers: true,
-      },
+      const msg = {
+        content: `Tạo thành công nhóm ${savedChat.name}`,
+        userId: userAdmin.userId,
+        chatId: savedChat.id,
+        createdAt: new Date(),
+        type: MessageType.SYSTEM,
+        status: StatusMessage.Sent,
+      };
+
+      await this.messageService.create(msg, manager);
+
+      return await manager.findOne(Chat, {
+        where: { id: savedChat.id },
+        relations: ['chatMembers', 'messages', 'lastMessage'],
+      });
     });
   }
 
@@ -84,23 +95,48 @@ export class ChatService {
       pageDto: filter.pageDto,
       total: chatCount,
     });
+
     return new ResponsePageDto(
       chats.map((e) => plainToInstance(Chat, e)),
       pageMetaDto,
     );
   }
 
-  async getChatByUserService(user: UserPayload) {
-    return await this.chatMemberRepo.find({
-      where: { user: { id: user.id } },
-      relations: {
-        chat: true,
+  async getChatByUserService(filter: ChatFilter, user: UserPayload) {
+    const queryBuilder = this.chatRepo.createQueryBuilder('ChatMember');
+
+    const [conversations, conversationCount] = await this.chatMemberRepo
+      .createQueryBuilder('ChatMember')
+      .leftJoinAndSelect('ChatMember.chat', 'chat')
+      // .leftJoinAndSelect('chat.lastMessage', 'lastMessage')
+      // .leftJoinAndSelect('lastMessage.messageStatus', 'messageStatus')
+      // .leftJoinAndSelect('messageStatus.user', 'user')
+      .where('ChatMember.user = :userId', { userId: user.id })
+      .skip(filter.skip)
+      .take(filter.limit)
+      .getManyAndCount();
+
+    const pageMetaDto = new PageMetaDto({
+      pageDto: filter.pageDto,
+      total: conversationCount,
+    });
+
+    return new ResponsePageDto(
+      conversations.map((c) => c.chat),
+      pageMetaDto,
+    );
+  }
+
+  async getDetailChatService(id: string) {
+    return await this.chatRepo.findOne({
+      where: {
+        id,
       },
-      withDeleted: false,
     });
   }
 
   async getConverseService(id: string) {
+    console.log('id', id);
     return await this.chatRepo.findOne({
       where: { id },
       relations: {

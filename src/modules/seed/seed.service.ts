@@ -7,6 +7,8 @@ import { use } from 'passport';
 import { ChatMember, ChatRole } from '../../entities/chatMember.entity';
 import { AuthService } from '../auth/auth.service';
 import { AuthDto } from '../auth/dto/auth.dto';
+import { ChatService } from '../chat/chat.service';
+import { CreateChatDto } from '../chat/dto/create-chat.dto';
 
 @Injectable()
 export class SeedService {
@@ -16,6 +18,7 @@ export class SeedService {
     @InjectRepository(Chat)
     private readonly chatRepo: Repository<Chat>,
     private readonly authService: AuthService,
+    private readonly chatService: ChatService,
   ) {}
 
   async createUserService(): Promise<any> {
@@ -32,45 +35,17 @@ export class SeedService {
 
   async createChatService(): Promise<any> {
     const users = await this.userRepo.find();
-    const chats = Array.from({ length: 10 }, (_, i) => ({
+    const chats: CreateChatDto[] = Array.from({ length: 10 }, (_, i) => ({
       name: `Chat Group ${i + 1}`,
-      type: 'group' as ChatStatus,
+      type: ChatStatus.Gr,
       createdAt: new Date(),
+      chatMembers: users.map((user, index) => ({
+        userId: user.id,
+        role: index === 3 ? ChatRole.ADMIN : ChatRole.MEMBER,
+      })),
     }));
 
-    const newChats = chats.map((c) => {
-      const chat = new Chat();
-      chat.name = c.name;
-      chat.type = c.type;
-      chat.createdAt = c.createdAt;
-      return chat;
-    });
-
-    await this.chatRepo.manager.transaction(async (manager) => {
-      const savedChats = await manager
-        .createQueryBuilder()
-        .insert()
-        .into(Chat)
-        .values(newChats)
-        .execute();
-
-      const chatMembers = savedChats.identifiers.flatMap((chat, index) => {
-        return users.map((user, index) => {
-          const chatMember = new ChatMember();
-          chatMember.user = user;
-          chatMember.chat = chat as Chat;
-          chatMember.role = index !== 3 ? ChatRole.MEMBER : ChatRole.ADMIN;
-          chatMember.createdAt = new Date();
-          return chatMember;
-        });
-      });
-
-      await manager
-        .createQueryBuilder()
-        .insert()
-        .into(ChatMember)
-        .values(chatMembers)
-        .execute();
-    });
+    const createPromises = chats.map((c) => this.chatService.createService(c));
+    await Promise.all(createPromises);
   }
 }

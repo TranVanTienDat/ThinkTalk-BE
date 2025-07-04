@@ -7,17 +7,20 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
+  ValidationPipe,
 } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { UserAuth } from '../../common/decorators/auth-user.decorator';
+import { AdminChatGuard } from '../../common/guard/admin-chat.guard';
+import { Chat } from '../../entities/chat.entity';
+import { ChatMember, ChatRole } from '../../entities/chatMember.entity';
+import { UserPayload } from '../auth/dto/user-payload.dto';
 import { ChatService } from './chat.service';
+import { ChatFilter } from './dto/chat.filter';
 import { CreateChatDto } from './dto/create-chat.dto';
 import { UpdateChatDto } from './dto/update-chat.dto';
-import { ChatMember, ChatRole } from '../../entities/chatMember.entity';
-import { UserAuth } from '../../common/decorators/auth-user.decorator';
-import { UserPayload } from '../auth/dto/user-payload.dto';
-import { ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
-import { Chat } from '../../entities/chat.entity';
-import { AdminChatGuard } from '../../common/guard/admin-chat.guard';
 
 @Controller('chat')
 export class ChatController {
@@ -36,17 +39,21 @@ export class ChatController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get the conversation list' })
   @ApiResponse({ status: HttpStatus.OK, type: Chat })
-  getChatByUser(@UserAuth() user: UserPayload) {
-    return this.chatService.getChatByUserService(user);
+  getChatByUser(
+    @UserAuth() user: UserPayload,
+    @Query(new ValidationPipe({ transform: true }))
+    filter: ChatFilter,
+  ) {
+    return this.chatService.getChatByUserService(filter, user);
   }
 
-  @Get()
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Get the conversation' })
-  @ApiResponse({ status: HttpStatus.OK, type: Chat })
-  getConverseService(@UserAuth() user: UserPayload) {
-    return this.chatService.getConverseService(user.id);
-  }
+  // @Get()
+  // @ApiBearerAuth()
+  // @ApiOperation({ summary: 'Get the conversation' })
+  // @ApiResponse({ status: HttpStatus.OK, type: Chat })
+  // getConverseService(@UserAuth() user: UserPayload) {
+  //   return this.chatService.getConverseService(user.id);
+  // }
 
   @Patch(':id')
   @UseGuards(AdminChatGuard)
