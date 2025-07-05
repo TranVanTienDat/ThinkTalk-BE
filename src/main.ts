@@ -29,25 +29,26 @@ function createSwagger(app: INestApplication) {
 }
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
-
-  app.setGlobalPrefix('/api/v1/');
-  if (!process.env.SWAGGER_ENABLE || process.env.SWAGGER_ENABLE === '1') {
-    createSwagger(app);
-  }
-  app.enableCors({ origin: '*' });
-  app.useGlobalPipes(new ValidationPipe());
-  useContainer(app.select(AppModule), { fallbackOnErrors: true });
-
-  // Create Redis IoAdapter for WebSocket support
-  const redisIoAdapter = new RedisIoAdapter(app);
   try {
+    const app = await NestFactory.create(AppModule);
+
+    // Create Redis IoAdapter for WebSocket support
+    const redisIoAdapter = new RedisIoAdapter(app);
+
     await redisIoAdapter.connectToRedis();
     app.useWebSocketAdapter(redisIoAdapter);
+
+    app.setGlobalPrefix('/api/v1/');
+    if (!process.env.SWAGGER_ENABLE || process.env.SWAGGER_ENABLE === '1') {
+      createSwagger(app);
+    }
+    app.enableCors({ origin: '*' });
+    app.useGlobalPipes(new ValidationPipe());
+    useContainer(app.select(AppModule), { fallbackOnErrors: true });
+
+    await app.listen(process.env.APP_PORT || 5000);
   } catch (error) {
     console.error('❌ Redis connection failed:', error);
   }
-
-  await app.listen(process.env.APP_PORT || 5000);
 }
 bootstrap();
