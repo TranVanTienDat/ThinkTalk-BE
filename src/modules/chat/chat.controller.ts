@@ -15,7 +15,7 @@ import { ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { UserAuth } from '../../common/decorators/auth-user.decorator';
 import { AdminChatGuard } from '../../common/guard/admin-chat.guard';
 import { Chat } from '../../entities/chat.entity';
-import { ChatMember, ChatRole } from '../../entities/chatMember.entity';
+import { ChatMember, ChatRoles } from '../../entities/chatMember.entity';
 import { UserPayload } from '../auth/dto/user-payload.dto';
 import { ChatService } from './chat.service';
 import { ChatFilter } from './dto/chat.filter';
@@ -31,7 +31,7 @@ export class ChatController {
   @ApiResponse({ status: HttpStatus.CREATED, type: Chat })
   @ApiBearerAuth()
   create(@UserAuth() user: UserPayload, @Body() createChatDto: CreateChatDto) {
-    createChatDto.chatMembers.push({ userId: user.id, role: ChatRole.ADMIN });
+    createChatDto.chatMembers.push({ userId: user.id, role: ChatRoles.ADMIN });
     return this.chatService.createService(createChatDto);
   }
 

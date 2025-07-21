@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { ChatService } from '../../modules/chat/chat.service';
+import { ChatRoles } from 'src/entities/chatMember.entity';
 
 @Injectable()
 export class AdminChatGuard implements CanActivate {
@@ -23,13 +24,7 @@ export class AdminChatGuard implements CanActivate {
       return false;
     }
 
-    const isAdmin = await this.chatService.isAdminChat(user.id, chatId);
-    if (!isAdmin) {
-      throw new ForbiddenException(
-        'You do not have permission to perform this action',
-      );
-    }
-
-    return true;
+    const isAdmin = await this.chatService.getRole(user.id, chatId);
+    return isAdmin === ChatRoles.ADMIN;
   }
 }

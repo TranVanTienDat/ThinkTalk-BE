@@ -1,5 +1,5 @@
 import { Socket } from 'socket.io';
-import { WsAuthGuard } from '../guard/websocket-auth.guard';
+import { WsAuthGuard } from '../guard/ws-auth.guard';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { WsException } from '@nestjs/websockets';

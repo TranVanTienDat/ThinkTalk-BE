@@ -48,7 +48,7 @@ async function bootstrap() {
 
     await app.listen(process.env.APP_PORT || 5000);
   } catch (error) {
-    console.error('❌ Redis connection failed:', error);
+    console.log('❌ Err:', error);
   }
 }
 bootstrap();

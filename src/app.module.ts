@@ -13,7 +13,7 @@ import { AuthGuard } from './common/guard/jwt-auth.guard';
 import { AccessModule } from './modules/access/access.module';
 import { DeviceModule } from './modules/device/device.module';
 import { SeedModule } from './modules/seed/seed.module';
-import { WsAuthGuard } from './common/guard/websocket-auth.guard';
+import { WsAuthGuard } from './common/guard/ws-auth.guard';
 import { MessageModule } from './modules/message/message.module';
 
 @Module({

@@ -39,7 +39,7 @@ export class BaseFilter {
   })
   @IsEnum(Order)
   @IsOptional()
-  readonly order: Order;
+  readonly order: Order = Order.DESC;
 
   @ApiPropertyOptional({
     default: Constant.SORT_COLUMN,

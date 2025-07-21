@@ -6,7 +6,7 @@ import { Repository } from 'typeorm';
 import { PageMetaDto } from '../../common/dto';
 import { ResponsePageDto } from '../../common/dto/response-page.dto';
 import { Chat } from '../../entities/chat.entity';
-import { ChatMember, ChatRole } from '../../entities/chatMember.entity';
+import { ChatMember, ChatRoles } from '../../entities/chatMember.entity';
 import { User } from '../../entities/user.entity';
 import { UserPayload } from '../auth/dto/user-payload.dto';
 import { MessageService } from '../message/message.service';
@@ -15,6 +15,7 @@ import { ChatFilter } from './dto/chat.filter';
 import { ChatMemberDto, CreateChatDto } from './dto/create-chat.dto';
 import { UpdateChatDto } from './dto/update-chat.dto';
 import { StatusMessage } from 'src/entities/messageStatus.entity';
+import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class ChatService {
@@ -35,7 +36,7 @@ export class ChatService {
         name,
         type,
         userIds: chatMembers.map((chatMember) => chatMember.userId),
-        createdAt: new Date(),
+        avatar: `https://i.pravatar.cc/150?u=${uuidv4()}`,
       });
       const savedChat = await manager.save(chat);
 
@@ -50,12 +51,12 @@ export class ChatService {
       await manager.insert(ChatMember, members);
 
       const userAdmin = chatMembers.filter(
-        (member) => member.role === ChatRole.ADMIN,
+        (member) => member.role === ChatRoles.ADMIN,
       )[0];
 
       const msg = {
         content: `Tạo thành công nhóm ${savedChat.name}`,
-        userId: userAdmin.userId,
+        senderId: userAdmin.userId,
         chatId: savedChat.id,
         createdAt: new Date(),
         type: MessageType.SYSTEM,
@@ -103,15 +104,15 @@ export class ChatService {
   }
 
   async getChatByUserService(filter: ChatFilter, user: UserPayload) {
-    const queryBuilder = this.chatRepo.createQueryBuilder('ChatMember');
+    const queryBuilder = this.chatMemberRepo.createQueryBuilder('ChatMember');
 
-    const [conversations, conversationCount] = await this.chatMemberRepo
-      .createQueryBuilder('ChatMember')
+    const [conversations, conversationCount] = await queryBuilder
       .leftJoinAndSelect('ChatMember.chat', 'chat')
-      // .leftJoinAndSelect('chat.lastMessage', 'lastMessage')
-      // .leftJoinAndSelect('lastMessage.messageStatus', 'messageStatus')
-      // .leftJoinAndSelect('messageStatus.user', 'user')
+      .leftJoinAndSelect('chat.lastMessage', 'lastMessage')
+      .leftJoinAndSelect('lastMessage.messageStatus', 'messageStatus')
+      .leftJoinAndSelect('messageStatus.user', 'user')
       .where('ChatMember.user = :userId', { userId: user.id })
+      .orderBy(`ChatMember.${filter.orderBy}`, filter.order)
       .skip(filter.skip)
       .take(filter.limit)
       .getManyAndCount();
@@ -173,7 +174,7 @@ export class ChatService {
         return manager.create(this.chatMemberRepo.target, {
           user: { id: userId } as User,
           chat,
-          role: ChatRole.MEMBER,
+          role: ChatRoles.MEMBER,
         });
       });
 
@@ -199,11 +200,11 @@ export class ChatService {
       await this.chatMemberRepo.remove(chatMember);
     });
   }
-  async isAdminChat(userId: string, chatId: string) {
+  async getRole(userId: string, chatId: string) {
     const chatMember = await this.chatMemberRepo.findOne({
       where: { user: { id: userId }, chat: { id: chatId } },
     });
 
-    return chatMember?.role === ChatRole.ADMIN;
+    return chatMember?.role;
   }
 }

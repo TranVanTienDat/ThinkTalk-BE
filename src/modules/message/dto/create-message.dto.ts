@@ -9,7 +9,7 @@ export class CreateMessageDto {
 
   @IsNotEmpty()
   @IsUUID()
-  userId: string;
+  senderId: string;
 
   @IsNotEmpty()
   @IsUUID()

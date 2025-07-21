@@ -3,7 +3,7 @@ import { BaseEntity } from '../common/entities/base.entity';
 import { Chat } from './chat.entity';
 import { User } from './user.entity';
 
-export enum ChatRole {
+export enum ChatRoles {
   ADMIN = 'admin',
   MEMBER = 'member',
 }
@@ -12,10 +12,10 @@ export enum ChatRole {
 export class ChatMember extends BaseEntity {
   @Column({
     type: 'enum',
-    enum: ChatRole,
-    default: ChatRole.MEMBER,
+    enum: ChatRoles,
+    default: ChatRoles.MEMBER,
   })
-  role: ChatRole;
+  role: ChatRoles;
 
   @ManyToOne(() => User, (user) => user.chatMembers)
   @JoinColumn({ name: 'user_id' })

@@ -16,6 +16,7 @@ import * as path from 'path';
           entities: [path.resolve(__dirname, '..') + '/**/*.entity{.ts,.js}'],
           autoLoadEntities: true,
           synchronize: true,
+          ssl: false,
         };
       },
     }),

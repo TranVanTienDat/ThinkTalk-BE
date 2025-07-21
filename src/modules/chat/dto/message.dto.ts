@@ -25,14 +25,7 @@ export class SendMessageDto {
   messageType?: string = 'text';
 }
 
-export class JoinRoomDto {
-  @ApiProperty({ description: 'ID của chat/group', example: 'chat-123' })
-  @IsString()
-  @IsNotEmpty()
-  chatId: string;
-}
-
-export class LeaveRoomDto {
+export class RoomDto {
   @ApiProperty({ description: 'ID của chat/group', example: 'chat-123' })
   @IsString()
   @IsNotEmpty()

@@ -6,4 +6,6 @@ export class UserPayload {
 
   @ApiProperty({ description: 'Email', example: '123@gmail.com' })
   email: string;
+  @ApiProperty({ description: 'Name', example: 'Nguy A' })
+  fullName: string;
 }

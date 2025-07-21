@@ -1,3 +1,6 @@
+import { UseGuards, ValidationPipe } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { JwtService } from '@nestjs/jwt';
 import {
   ConnectedSocket,
   MessageBody,
@@ -7,22 +10,20 @@ import {
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
-import { UseGuards, ValidationPipe } from '@nestjs/common';
-import { Socket } from 'socket.io';
-import { ChatService } from './chat.service';
-import { CreateChatDto } from './dto/create-chat.dto';
-import { SendMessageDto, JoinRoomDto, LeaveRoomDto } from './dto/message.dto';
-import { WsAuthGuard } from '../../common/guard/websocket-auth.guard';
+import { Server, Socket } from 'socket.io';
+import { WsJwtMiddleware } from 'src/common/middleware/wsAuth.middleware';
+import { ResponseDataWs } from 'src/common/types';
 import { WsUser } from '../../common/decorators/ws-user.decorator';
+import { WsAuthGuard } from '../../common/guard/ws-auth.guard';
+import { ChatRoles } from '../../entities/chatMember.entity';
 import { UserPayload } from '../auth/dto/user-payload.dto';
-import { ChatRole } from '../../entities/chatMember.entity';
-import { JwtService } from '@nestjs/jwt';
-import { ConfigService } from '@nestjs/config';
-import {
-  socketAuthMiddleware,
-  WsJwtMiddleware,
-} from 'src/common/middleware/wsAuth.middleware';
+import { ChatService } from './chat.service';
 import { ChatFilter } from './dto/chat.filter';
+import { CreateChatDto } from './dto/create-chat.dto';
+import { RoomDto, SendMessageDto } from './dto/message.dto';
+import { UpdateChatDtoSW } from './dto/update-chat.dto';
+import { Roles } from 'src/common/decorators/roles.decorator';
+import { WsRolesGuard } from 'src/common/guard/roles.guard';
 
 @WebSocketGateway({
   cors: {
@@ -38,15 +39,13 @@ export class ChatWebsocketGateway
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
   ) {}
-  @WebSocketServer() server;
-
-  // Lưu trữ thông tin socket của user
-  private userSockets = new Map<string, string>(); // userId -> socketId
+  @WebSocketServer() server: Server;
 
   async handleConnection(socket: Socket): Promise<any> {
     new WsJwtMiddleware(this.jwtService, this.configService).handle(socket);
     console.log('handleConnection', socket.data);
-    if (!socket?.data?.user) {
+    const user = socket?.data?.user;
+    if (!user) {
       socket.disconnect();
       return;
     }
@@ -54,8 +53,6 @@ export class ChatWebsocketGateway
 
   handleDisconnect(socket: Socket): void {
     const user = socket.data.user as UserPayload;
-
-    console.log('handleDisconnect User', user);
   }
 
   @SubscribeMessage('get-conversations')
@@ -69,7 +66,7 @@ export class ChatWebsocketGateway
         socket.data.user,
       );
 
-      if (!conversations.data) {
+      if (!conversations.data.length) {
         socket.emit('conversations-not-found', {
           success: false,
           message: 'Không tìm thấy danh sách cuộc trò chuyện',
@@ -80,7 +77,10 @@ export class ChatWebsocketGateway
         };
       }
 
-      // Kiểm tra user có trong nhóm không
+      const joined = await this.joinRoom(
+        conversations.data.map((chat) => ({ chatId: chat.id })),
+        socket,
+      );
 
       socket.emit('conversations-retrieved', {
         success: true,
@@ -142,33 +142,27 @@ export class ChatWebsocketGateway
     @WsUser() user: UserPayload,
   ) {
     try {
-      console.log('user 123', user);
-      console.log('data', data);
-      const socketId = socket.id;
-      data.chatMembers.push({ userId: user.id, role: ChatRole.ADMIN });
-      // Tự động thêm người tạo vào nhóm với role admin
-      // if (!data.chatMembers.find((member) => member.userId === user.id)) {
-      //   data.chatMembers.push({ userId: user.id, role: ChatRole.ADMIN });
-      // }
+      data.chatMembers.push({ userId: user.id, role: ChatRoles.ADMIN });
 
       // Tạo nhóm chat
-      // const newChat = await this.chatService.createService(data);
+      const newChat = await this.chatService.createService(data);
 
-      // Gửi thông báo tạo nhóm thành công cho người tạo
-      socket.emit('group-created', {
-        success: true,
-        message: 'Nhóm đã được tạo thành công',
-        // chat: newChat,
-      });
+      const rooms = await this.joinRoom([{ chatId: newChat.id }], socket);
+      const res: ResponseDataWs = {
+        status: 'success',
+        data: newChat,
+        message: 'Created group success!',
+        sender: user,
+      };
 
-      const memberIds = data.chatMembers.map((member) => member.userId);
-      this.notifyGroupMembers(memberIds, 'new-group-created', {
-        chat: 'test',
-        message: `Bạn đã được thêm vào nhóm "${data.name}"`,
-        createdBy: user.email,
-      });
+      this.notifyGroupMembers(
+        `group-${newChat.id}`,
+        res,
+        socket,
+        'group-created',
+      );
 
-      // return { success: true, chat: newChat };
+      return { success: true, chat: newChat };
     } catch (error) {
       console.error('Error creating group:', error);
       socket.emit('group-created', {
@@ -179,53 +173,27 @@ export class ChatWebsocketGateway
       return { success: false, error: error.message };
     }
   }
-
+  @UseGuards(WsRolesGuard)
+  @Roles([ChatRoles.ADMIN])
   @SubscribeMessage('update-group')
   async update(
-    @MessageBody() data: any,
+    @MessageBody() dataBody: UpdateChatDtoSW,
     @ConnectedSocket() socket: Socket,
     @WsUser() user: UserPayload,
   ) {
     try {
-      const socketId = socket.id;
-      console.log(
-        `Updating group... socket id: ${socketId}, user: ${user.email}`,
-        data,
-      );
+      const { chatId, data } = dataBody;
+      console.log('dataBody', dataBody);
+      const updatedChat = await this.chatService.updateService(chatId, data);
 
-      const { chatId, updateData } = data;
+      const res: ResponseDataWs = {
+        status: 'success',
+        data: updatedChat,
+        message: 'Update chat success!',
+        sender: 'system',
+      };
 
-      // Kiểm tra quyền admin
-      const isAdmin = await this.chatService.isAdminChat(user.id, chatId);
-      if (!isAdmin) {
-        socket.emit('group-updated', {
-          success: false,
-          message: 'Bạn không có quyền cập nhật nhóm này',
-        });
-        return { success: false, message: 'Không có quyền' };
-      }
-
-      const updatedChat = await this.chatService.updateService(
-        chatId,
-        updateData,
-      );
-
-      // Lấy thông tin nhóm để gửi thông báo
-      const chat = await this.chatService.getConverseService(chatId);
-
-      // Gửi thông báo cập nhật thành công
-      socket.emit('group-updated', {
-        success: true,
-        message: 'Nhóm đã được cập nhật thành công',
-        chat: updatedChat,
-      });
-
-      // Gửi thông báo đến tất cả thành viên trong nhóm
-      this.notifyGroupMembers(chat.userIds, 'group-updated', {
-        chat: updatedChat,
-        message: `Nhóm "${chat.name}" đã được cập nhật`,
-        updatedBy: user.email,
-      });
+      this.notifyGroupMembers(`group-${chatId}`, res, socket, 'group-updated');
 
       return { success: true, chat: updatedChat };
     } catch (error) {
@@ -255,14 +223,14 @@ export class ChatWebsocketGateway
       const { chatId } = data;
 
       // Kiểm tra quyền admin
-      const isAdmin = await this.chatService.isAdminChat(user.id, chatId);
-      if (!isAdmin) {
-        socket.emit('group-deleted', {
-          success: false,
-          message: 'Bạn không có quyền xóa nhóm này',
-        });
-        return { success: false, message: 'Không có quyền' };
-      }
+      // const isAdmin = await this.chatService.isAdminChat(user.id, chatId);
+      // if (!isAdmin) {
+      //   socket.emit('group-deleted', {
+      //     success: false,
+      //     message: 'Bạn không có quyền xóa nhóm này',
+      //   });
+      //   return { success: false, message: 'Không có quyền' };
+      // }
 
       // Lấy thông tin nhóm trước khi xóa
       const chat = await this.chatService.getConverseService(chatId);
@@ -277,12 +245,11 @@ export class ChatWebsocketGateway
         chatId: chatId,
       });
 
-      // Gửi thông báo đến tất cả thành viên trong nhóm
-      this.notifyGroupMembers(chat.userIds, 'group-deleted', {
-        chatId: chatId,
-        message: `Nhóm "${chat.name}" đã bị xóa`,
-        deletedBy: user.email,
-      });
+      // this.notifyGroupMembers(chat.userIds, 'group-deleted', {
+      //   chatId: chatId,
+      //   message: `Nhóm "${chat.name}" đã bị xóa`,
+      //   deletedBy: user.email,
+      // });
 
       return { success: true, chatId: chatId };
     } catch (error) {
@@ -349,16 +316,11 @@ export class ChatWebsocketGateway
 
   @SubscribeMessage('join-room')
   async joinRoom(
-    @MessageBody() data: JoinRoomDto,
+    @MessageBody() data: RoomDto[],
     @ConnectedSocket() socket: Socket,
-    @WsUser() user: UserPayload,
   ) {
     try {
-      const { chatId } = data;
-
-      // Kiểm tra user có trong nhóm không
-      const conversation = await this.chatService.getConverseService(chatId);
-      if (!conversation || !conversation.userIds.includes(user.id)) {
+      if (!data.length) {
         socket.emit('room-join-failed', {
           success: false,
           message: 'Bạn không có quyền tham gia phòng này',
@@ -366,16 +328,11 @@ export class ChatWebsocketGateway
         return { success: false, message: 'Không có quyền tham gia' };
       }
 
-      socket.join(`chat-${chatId}`);
-      console.log(`User ${user.email} joined room: chat-${chatId}`);
-
-      socket.emit('room-joined', {
-        success: true,
-        roomId: `chat-${chatId}`,
-        message: 'Đã tham gia phòng chat',
+      data.forEach((chat) => {
+        socket.join(`group-${chat.chatId}`);
       });
 
-      return { success: true, roomId: `chat-${chatId}` };
+      return { success: true, roomIds: data };
     } catch (error) {
       console.error('Error joining room:', error);
       socket.emit('room-join-failed', {
@@ -389,33 +346,83 @@ export class ChatWebsocketGateway
 
   @SubscribeMessage('leave-room')
   async leaveRoom(
-    @MessageBody() data: LeaveRoomDto,
+    @MessageBody() data: RoomDto[],
+    @ConnectedSocket() socket: Socket,
+  ) {
+    if (!data.length) {
+      socket.emit('room-left-failed', {
+        success: false,
+        message: 'Bạn không quyền rời phòng này',
+      });
+      return { success: false, message: 'Không có quyền rời phòng' };
+    }
+
+    data.forEach((chat) => {
+      socket.leave(`group-${chat.chatId}`);
+      socket.emit('room-left', {
+        success: true,
+        roomId: `group-${chat.chatId}`,
+        message: 'Đã rời khỏi phòng chat',
+      });
+    });
+  }
+
+  // Event để join room mới khi được thêm vào group
+  @SubscribeMessage('join-new-room')
+  async joinNewRoom(
+    @MessageBody() data: { chatId: string },
     @ConnectedSocket() socket: Socket,
     @WsUser() user: UserPayload,
   ) {
-    const { chatId } = data;
-    socket.leave(`chat-${chatId}`);
-    console.log(`User ${user.email} left room: chat-${chatId}`);
+    try {
+      const { chatId } = data;
 
-    socket.emit('room-left', {
-      success: true,
-      roomId: `chat-${chatId}`,
-      message: 'Đã rời khỏi phòng chat',
-    });
-  }
-
-  // Phương thức hỗ trợ gửi thông báo đến các thành viên trong nhóm
-  private notifyGroupMembers(userIds: string[], event: string, data: any) {
-    userIds.forEach((userId) => {
-      const socketId = this.userSockets.get(userId);
-      if (socketId) {
-        this.server.to(socketId).emit(event, data);
-        console.log(`Sent ${event} to user ${userId} (socket: ${socketId})`);
-      } else {
-        console.log(`User ${userId} is not online, cannot send notification`);
+      // Kiểm tra user có trong nhóm không
+      const conversation = await this.chatService.getConverseService(chatId);
+      if (!conversation || !conversation.userIds.includes(user.id)) {
+        socket.emit('new-room-join-failed', {
+          success: false,
+          message: 'Bạn không có quyền tham gia phòng này',
+        });
+        return { success: false, message: 'Không có quyền tham gia' };
       }
-    });
+
+      socket.join(`chat-${chatId}`);
+      console.log(`User ${user.email} joined new room: chat-${chatId}`);
+
+      socket.emit('new-room-joined', {
+        success: true,
+        roomId: `chat-${chatId}`,
+        message: 'Đã tham gia phòng chat mới',
+      });
+
+      return { success: true, roomId: `chat-${chatId}` };
+    } catch (error) {
+      console.error('Error joining new room:', error);
+      socket.emit('new-room-join-failed', {
+        success: false,
+        message: 'Có lỗi xảy ra khi tham gia phòng mới',
+        error: error.message,
+      });
+      return { success: false, message: error.message };
+    }
   }
+
+  // Phương thức hỗ trợ chỉ gửi thông báo đến các thành viên khác trong nhóm
+  private notifyGroupMembers(
+    roomId: string,
+    data: ResponseDataWs,
+    socket: Socket | Server,
+    nameEmit: string,
+  ) {
+    socket.to(roomId).emit(nameEmit, {
+      ...data,
+    });
+
+    // return { success: false, message:  };
+  }
+
+  //  // Phương thức hỗ trợ gửi thông báo đến tất cả  thành viên
 
   // Phương thức gửi tin nhắn đến phòng chat
   @SubscribeMessage('send-message')

@@ -7,7 +7,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { ChatRole } from '../../../entities/chatMember.entity';
+import { ChatRoles } from '../../../entities/chatMember.entity';
 import { ApiProperty } from '@nestjs/swagger';
 import { ChatStatus } from '../../../entities/chat.entity';
 
@@ -17,9 +17,9 @@ export class ChatMemberDto {
   userId: string;
 
   @ApiProperty({ description: 'role', example: 'admin' })
-  @IsEnum(ChatRole)
+  @IsEnum(ChatRoles)
   @IsOptional()
-  role: ChatRole = ChatRole.MEMBER;
+  role: ChatRoles = ChatRoles.MEMBER;
 }
 
 export class CreateChatDto {

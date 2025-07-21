@@ -129,6 +129,7 @@ export class AuthService {
   public async generateAccessToken(user: UserPayload): Promise<string> {
     const payload = {
       id: user.id,
+      name: user.fullName,
       email: user.email,
     };
     const secret = this.configService.get<string>('JWT_SECRET');
