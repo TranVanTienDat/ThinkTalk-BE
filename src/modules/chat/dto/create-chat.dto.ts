@@ -5,6 +5,7 @@ import {
   IsString,
   IsArray,
   ValidateNested,
+  IsUUID,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ChatRoles } from '../../../entities/chatMember.entity';
@@ -14,6 +15,7 @@ import { ChatStatus } from '../../../entities/chat.entity';
 export class ChatMemberDto {
   @ApiProperty({ description: 'userId', example: '123' })
   @IsNotEmpty()
+  @IsUUID()
   userId: string;
 
   @ApiProperty({ description: 'role', example: 'admin' })

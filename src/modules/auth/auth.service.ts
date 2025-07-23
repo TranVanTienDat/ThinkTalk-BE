@@ -19,6 +19,7 @@ import { UsersService } from '../users/users.service';
 import { AuthDto, LoginDto } from './dto/auth.dto';
 import { UserData } from './dto/user-data.dto';
 import { UserPayload } from './dto/user-payload.dto';
+import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class AuthService {
@@ -48,6 +49,7 @@ export class AuthService {
         email,
         password: hashedPassword,
         fullName,
+        avatar: `https://i.pravatar.cc/150?u=${uuidv4()}`,
       });
       await manager.save(user);
 

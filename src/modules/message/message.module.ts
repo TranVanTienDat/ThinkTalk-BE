@@ -7,10 +7,12 @@ import { MessageStatus } from 'src/entities/messageStatus.entity';
 import { Chat } from 'src/entities/chat.entity';
 import { ChatService } from '../chat/chat.service';
 import { ChatModule } from '../chat/chat.module';
+import { MessageController } from './message.controller';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Message, MessageStatus, Chat])],
   providers: [MessageGateway, MessageService],
   exports: [MessageService],
+  controllers: [MessageController],
 })
 export class MessageModule {}

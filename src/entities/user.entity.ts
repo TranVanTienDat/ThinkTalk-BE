@@ -6,6 +6,7 @@ import { MessageStatus } from './messageStatus.entity';
 import { Notification } from './notification.entity';
 import { Device } from './device.entity';
 import { Access } from './access.entity';
+import { Exclude } from 'class-transformer';
 export enum UserStatus {
   ON = 'online',
   OFF = 'offline',
@@ -13,9 +14,11 @@ export enum UserStatus {
 
 @Entity({ name: 'user' })
 export class User extends BaseEntity {
+  @Exclude()
   @Column({ name: 'email', nullable: true })
   email: string;
 
+  @Exclude()
   @Column({ name: 'password', nullable: true })
   password: string;
   @Column({ name: 'fullName', nullable: true })

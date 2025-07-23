@@ -56,7 +56,6 @@ export class ChatService {
 
       const msg = {
         content: `Tạo thành công nhóm ${savedChat.name}`,
-        senderId: userAdmin.userId,
         chatId: savedChat.id,
         createdAt: new Date(),
         type: MessageType.SYSTEM,

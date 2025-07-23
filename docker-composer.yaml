@@ -1,0 +1,17 @@
+services:
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: dev
+    container_name: cam-app
+    env_file:
+      - .env
+    ports:
+      - 3001:3001
+    environment:
+      NODE_ENV: ${NODE_ENV}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_ACCESS_EXPIRATION_TIME: ${JWT_ACCESS_EXPIRATION_TIME}
+      JWT_REFRESH_EXPIRATION_TIME: ${JWT_REFRESH_EXPIRATION_TIME}
+      DATABASE_URL: ${DATABASE_URL}

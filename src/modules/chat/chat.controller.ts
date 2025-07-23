@@ -30,7 +30,10 @@ export class ChatController {
   @ApiOperation({ summary: 'Create chat group' })
   @ApiResponse({ status: HttpStatus.CREATED, type: Chat })
   @ApiBearerAuth()
-  create(@UserAuth() user: UserPayload, @Body() createChatDto: CreateChatDto) {
+  create(
+    @UserAuth() user: UserPayload,
+    @Body(new ValidationPipe({ transform: true })) createChatDto: CreateChatDto,
+  ) {
     createChatDto.chatMembers.push({ userId: user.id, role: ChatRoles.ADMIN });
     return this.chatService.createService(createChatDto);
   }

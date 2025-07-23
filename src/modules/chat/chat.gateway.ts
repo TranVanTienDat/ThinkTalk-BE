@@ -24,6 +24,9 @@ import { RoomDto, SendMessageDto } from './dto/message.dto';
 import { UpdateChatDtoSW } from './dto/update-chat.dto';
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { WsRolesGuard } from 'src/common/guard/roles.guard';
+import { MessageService } from '../message/message.service';
+import { CreateMessageDto } from '../message/dto/create.dto';
+import { StatusMessage } from 'src/entities/messageStatus.entity';
 
 @WebSocketGateway({
   cors: {
@@ -38,6 +41,7 @@ export class ChatWebsocketGateway
     private readonly chatService: ChatService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    private readonly msgService: MessageService,
   ) {}
   @WebSocketServer() server: Server;
 
@@ -422,8 +426,6 @@ export class ChatWebsocketGateway
     // return { success: false, message:  };
   }
 
-  //  // Phương thức hỗ trợ gửi thông báo đến tất cả  thành viên
-
   // Phương thức gửi tin nhắn đến phòng chat
   @SubscribeMessage('send-message')
   async sendMessage(
@@ -434,7 +436,6 @@ export class ChatWebsocketGateway
     try {
       const { chatId, message, messageType } = data;
 
-      // Kiểm tra user có trong nhóm không
       const conversation = await this.chatService.getConverseService(chatId);
       if (!conversation || !conversation.userIds.includes(user.id)) {
         socket.emit('message-send-failed', {
@@ -444,17 +445,23 @@ export class ChatWebsocketGateway
         return { success: false, message: 'Không có quyền gửi tin nhắn' };
       }
 
-      // Gửi tin nhắn đến tất cả thành viên trong phòng
-      this.server.to(`chat-${chatId}`).emit('new-message', {
-        chatId,
-        message,
-        senderId: user.id,
-        senderEmail: user.email,
-        messageType: messageType || 'text',
-        timestamp: new Date(),
-      });
+      const msg: CreateMessageDto = {
+        content: message,
+        chatId: chatId,
+        type: messageType,
+        status: StatusMessage.Sent,
+      };
 
-      console.log(`Message sent to chat ${chatId} by ${user.email}:`, message);
+      const createdMsg = await this.msgService.create(msg);
+
+      const res: ResponseDataWs = {
+        status: 'success',
+        data: createdMsg,
+        message: 'Send message success!',
+        sender: user,
+      };
+
+      this.notifyGroupMembers(`group-${chatId}`, res, socket, 'sended-mesage');
 
       return { success: true };
     } catch (error) {

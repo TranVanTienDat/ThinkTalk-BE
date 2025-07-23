@@ -1,16 +1,14 @@
+import { fakerDE as faker } from '@faker-js/faker';
 import { Injectable } from '@nestjs/common';
-import { Repository } from 'typeorm';
-import { User, UserStatus } from '../../entities/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { v4 as uuidv4 } from 'uuid';
 import { Chat, ChatStatus } from '../../entities/chat.entity';
-import { use } from 'passport';
-import { ChatMember, ChatRoles } from '../../entities/chatMember.entity';
+import { ChatRoles } from '../../entities/chatMember.entity';
+import { User } from '../../entities/user.entity';
 import { AuthService } from '../auth/auth.service';
-import { AuthDto } from '../auth/dto/auth.dto';
 import { ChatService } from '../chat/chat.service';
 import { CreateChatDto } from '../chat/dto/create-chat.dto';
-import { fakerDE as faker } from '@faker-js/faker';
-import { v4 as uuidv4 } from 'uuid';
 @Injectable()
 export class SeedService {
   constructor(
@@ -37,7 +35,7 @@ export class SeedService {
   async createChatService(): Promise<any> {
     const users = await this.userRepo.find();
     const chats: CreateChatDto[] = Array.from({ length: 10 }, (_, i) => ({
-      name: `${faker.internet.displayName({ firstName: 'Nhóm ' })}`,
+      name: `${faker.internet.displayName()}`,
       type: ChatStatus.Gr,
       avatar: `https://i.pravatar.cc/150?u=${uuidv4()}`,
       chatMembers: users.map((user, index) => ({

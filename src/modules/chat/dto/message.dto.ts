@@ -1,5 +1,6 @@
-import { IsNotEmpty, IsString, IsOptional } from 'class-validator';
+import { IsNotEmpty, IsString, IsOptional, IsEnum } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { MessageType } from 'src/entities/message.entity';
 
 export class SendMessageDto {
   @ApiProperty({ description: 'ID của chat/group', example: 'chat-123' })
@@ -21,8 +22,8 @@ export class SendMessageDto {
     required: false,
   })
   @IsString()
-  @IsOptional()
-  messageType?: string = 'text';
+  @IsEnum(MessageType)
+  messageType: MessageType = MessageType.TEXT;
 }
 
 export class RoomDto {

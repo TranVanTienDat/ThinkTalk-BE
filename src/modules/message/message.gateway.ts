@@ -1,7 +1,11 @@
-import { WebSocketGateway, SubscribeMessage, MessageBody } from '@nestjs/websockets';
+import {
+  WebSocketGateway,
+  SubscribeMessage,
+  MessageBody,
+} from '@nestjs/websockets';
 import { MessageService } from './message.service';
-import { CreateMessageDto } from './dto/create-message.dto';
-import { UpdateMessageDto } from './dto/update-message.dto';
+import { UpdateMessageDto } from './dto/update.dto';
+import { CreateMessageDto } from './dto/create.dto';
 
 @WebSocketGateway()
 export class MessageGateway {
@@ -12,10 +16,10 @@ export class MessageGateway {
     return this.messageService.create(createMessageDto);
   }
 
-  @SubscribeMessage('findAllMessage')
-  findAll() {
-    return this.messageService.findAll();
-  }
+  // @SubscribeMessage('findAllMessage')
+  // findAll() {
+  //   return this.messageService.findAll();
+  // }
 
   @SubscribeMessage('findOneMessage')
   findOne(@MessageBody() id: number) {
