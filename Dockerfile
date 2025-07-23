@@ -1,8 +1,5 @@
-# Install dependencies if needed
 
-ARG NODE_ENV=20.0.0
-
-FROM node:${NODE_ENV}-alpine as dev
+FROM node:20-alpine 
 WORKDIR /app
 COPY package.json yarn.lock ./
 RUN yarn --frozen-lockfile
