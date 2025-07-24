@@ -59,7 +59,7 @@ export class ChatService {
         chatId: savedChat.id,
         createdAt: new Date(),
         type: MessageType.SYSTEM,
-        status: StatusMessage.Sent,
+        status: StatusMessage.Delivered,
       };
 
       await this.messageService.create(msg, manager);

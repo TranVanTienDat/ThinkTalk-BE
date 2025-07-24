@@ -178,6 +178,7 @@ export class ChatWebsocketGateway
       return { success: false, error: error.message };
     }
   }
+
   @UseGuards(WsRolesGuard)
   @Roles([ChatRoles.ADMIN])
   @SubscribeMessage('update-group')
@@ -332,10 +333,11 @@ export class ChatWebsocketGateway
         });
         return { success: false, message: 'Không có quyền tham gia' };
       }
-
       data.forEach((chat) => {
         socket.join(`group-${chat.chatId}`);
       });
+
+      console.log('join-room', socket.rooms);
 
       return { success: true, roomIds: data };
     } catch (error) {
@@ -450,7 +452,8 @@ export class ChatWebsocketGateway
         content: message,
         chatId: chatId,
         type: messageType,
-        status: StatusMessage.Sent,
+        senderId: user.id,
+        status: StatusMessage.Delivered,
       };
 
       const createdMsg = await this.msgService.create(msg);
@@ -462,9 +465,14 @@ export class ChatWebsocketGateway
         sender: user,
       };
 
-      this.notifyGroupMembers(`group-${chatId}`, res, socket, 'sended-mesage');
+      this.notifyGroupMembers(
+        `group-${chatId}`,
+        res,
+        this.server,
+        'sended-message',
+      );
 
-      return { success: true };
+      return { success: true, message: 'Gửi tin nhắn thành công', data: data };
     } catch (error) {
       console.error('Error sending message:', error);
       socket.emit('message-send-failed', {
