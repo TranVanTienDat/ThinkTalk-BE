@@ -48,8 +48,8 @@ export class ChatWebsocketGateway
 
   async handleConnection(socket: Socket): Promise<any> {
     new WsJwtMiddleware(this.jwtService, this.configService).handle(socket);
-    console.log('handleConnection', socket.data);
     const user = socket?.data?.user;
+    console.log('user handleConnection', user);
     if (!user) {
       socket.disconnect();
       return;

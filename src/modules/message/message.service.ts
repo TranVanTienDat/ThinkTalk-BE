@@ -53,7 +53,6 @@ export class MessageService {
   }
 
   async findByConversation(id: string, filter: MessageFilter) {
-    console.log('filter', filter);
     const queryBuilder = this.messageRepo.createQueryBuilder('message');
 
     const [data, total] = await queryBuilder

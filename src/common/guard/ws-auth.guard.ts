@@ -26,7 +26,9 @@ export class WsAuthGuard implements CanActivate {
   }
 
   private extractTokenFromSocket(client: Socket): string | undefined {
-    const authHeader = client.handshake.headers.authorization;
+    const authHeader =
+      client.handshake.headers.authorization || client.handshake.auth.token;
+
     if (!authHeader) return undefined;
 
     const [type, token] = authHeader.split(' ');

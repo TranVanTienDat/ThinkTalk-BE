@@ -1,8 +1,7 @@
-import { Socket } from 'socket.io';
-import { WsAuthGuard } from '../guard/ws-auth.guard';
-import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { JwtService } from '@nestjs/jwt';
 import { WsException } from '@nestjs/websockets';
+import { Socket } from 'socket.io';
 import { UserPayload } from 'src/modules/auth/dto/user-payload.dto';
 
 export class WsJwtMiddleware {
@@ -27,7 +26,8 @@ export class WsJwtMiddleware {
   }
 
   private extractTokenFromSocket(client: Socket): string | undefined {
-    const authHeader = client.handshake.headers.authorization;
+    const authHeader =
+      client.handshake.auth.token || client.handshake.headers.authorization;
     if (!authHeader) return undefined;
 
     const [type, token] = authHeader.split(' ');
