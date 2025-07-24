@@ -32,6 +32,7 @@ import { StatusMessage } from 'src/entities/messageStatus.entity';
   cors: {
     origin: '*',
   },
+  transports: ['websocket'],
 })
 @UseGuards(WsAuthGuard)
 export class ChatWebsocketGateway
