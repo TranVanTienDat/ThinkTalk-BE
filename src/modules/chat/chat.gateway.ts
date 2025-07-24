@@ -475,7 +475,7 @@ export class ChatWebsocketGateway
       return { success: true, message: 'Gửi tin nhắn thành công', data: data };
     } catch (error) {
       console.error('Error sending message:', error);
-      socket.emit('message-send-failed', {
+      socket.emit('sended-message', {
         success: false,
         message: 'Có lỗi xảy ra khi gửi tin nhắn',
         error: error.message,
