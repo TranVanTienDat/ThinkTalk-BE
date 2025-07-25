@@ -31,7 +31,7 @@ export class MessageService {
 
     const message = runInManager.create(Message, dto);
     const savedMessage = await runInManager.save(Message, message);
-    console.log('savedMessage', savedMessage);
+    // console.log('savedMessage', savedMessage);
     const messageStatus = runInManager.create(MessageStatus, {
       message: savedMessage,
       user:
@@ -48,7 +48,7 @@ export class MessageService {
 
     return await runInManager.findOne(Message, {
       where: { id: savedMessage.id },
-      relations: ['messageStatus'],
+      relations: ['chat', 'user', 'messageStatus'],
     });
   }
 

@@ -11,22 +11,22 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
+import { Roles } from 'src/common/decorators/roles.decorator';
+import { WsRolesGuard } from 'src/common/guard/roles.guard';
 import { WsJwtMiddleware } from 'src/common/middleware/wsAuth.middleware';
 import { ResponseDataWs } from 'src/common/types';
+import { StatusMessage } from 'src/entities/messageStatus.entity';
 import { WsUser } from '../../common/decorators/ws-user.decorator';
 import { WsAuthGuard } from '../../common/guard/ws-auth.guard';
 import { ChatRoles } from '../../entities/chatMember.entity';
 import { UserPayload } from '../auth/dto/user-payload.dto';
+import { CreateMessageDto } from '../message/dto/create.dto';
+import { MessageService } from '../message/message.service';
 import { ChatService } from './chat.service';
 import { ChatFilter } from './dto/chat.filter';
 import { CreateChatDto } from './dto/create-chat.dto';
 import { RoomDto, SendMessageDto } from './dto/message.dto';
 import { UpdateChatDtoSW } from './dto/update-chat.dto';
-import { Roles } from 'src/common/decorators/roles.decorator';
-import { WsRolesGuard } from 'src/common/guard/roles.guard';
-import { MessageService } from '../message/message.service';
-import { CreateMessageDto } from '../message/dto/create.dto';
-import { StatusMessage } from 'src/entities/messageStatus.entity';
 
 @WebSocketGateway({
   cors: {
@@ -49,11 +49,14 @@ export class ChatWebsocketGateway
   async handleConnection(socket: Socket): Promise<any> {
     new WsJwtMiddleware(this.jwtService, this.configService).handle(socket);
     const user = socket?.data?.user;
-    console.log('user handleConnection', user);
+
     if (!user) {
       socket.disconnect();
       return;
     }
+
+    const chatIds = await this.chatService.getAllChatId(user);
+    await this.joinRoom(chatIds, socket);
   }
 
   handleDisconnect(socket: Socket): void {
@@ -337,8 +340,7 @@ export class ChatWebsocketGateway
         socket.join(`group-${chat.chatId}`);
       });
 
-      console.log('join-room', socket.rooms);
-
+      console.log('rooms: ', socket.rooms);
       return { success: true, roomIds: data };
     } catch (error) {
       console.error('Error joining room:', error);
@@ -462,7 +464,6 @@ export class ChatWebsocketGateway
         status: 'success',
         data: createdMsg,
         message: 'Send message success!',
-        sender: user,
       };
 
       this.notifyGroupMembers(
@@ -476,9 +477,11 @@ export class ChatWebsocketGateway
     } catch (error) {
       console.error('Error sending message:', error);
       socket.emit('sended-message', {
-        success: false,
+        status: 'error',
         message: 'Có lỗi xảy ra khi gửi tin nhắn',
         error: error.message,
+        data: data,
+        userId: user.id,
       });
       return { success: false, error: error.message };
     }

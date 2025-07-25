@@ -127,6 +127,15 @@ export class ChatService {
     );
   }
 
+  async getAllChatId(user: UserPayload) {
+    const chatIds = await this.chatMemberRepo
+      .createQueryBuilder('ChatMember')
+      .select('ChatMember.chat_id', 'chatId')
+      .where('ChatMember.user = :userId', { userId: user.id })
+      .getRawMany();
+    return chatIds.map((row) => row);
+  }
+
   async getDetailChatService(id: string) {
     return await this.chatRepo.findOne({
       where: {
