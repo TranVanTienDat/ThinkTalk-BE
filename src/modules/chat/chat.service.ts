@@ -14,7 +14,7 @@ import { UsersService } from '../users/users.service';
 import { ChatFilter } from './dto/chat.filter';
 import { ChatMemberDto, CreateChatDto } from './dto/create-chat.dto';
 import { UpdateChatDto } from './dto/update-chat.dto';
-import { StatusMessage } from 'src/entities/messageStatus.entity';
+import { StatusMessage } from 'src/entities/messageRead.entity';
 import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
@@ -50,16 +50,11 @@ export class ChatService {
       });
       await manager.insert(ChatMember, members);
 
-      const userAdmin = chatMembers.filter(
-        (member) => member.role === ChatRoles.ADMIN,
-      )[0];
-
       const msg = {
         content: `Tạo thành công nhóm ${savedChat.name}`,
         chatId: savedChat.id,
         createdAt: new Date(),
         type: MessageType.SYSTEM,
-        status: StatusMessage.Delivered,
       };
 
       await this.messageService.create(msg, manager);
@@ -108,8 +103,8 @@ export class ChatService {
     const [conversations, conversationCount] = await queryBuilder
       .leftJoinAndSelect('ChatMember.chat', 'chat')
       .leftJoinAndSelect('chat.lastMessage', 'lastMessage')
-      .leftJoinAndSelect('lastMessage.messageStatus', 'messageStatus')
-      .leftJoinAndSelect('messageStatus.user', 'user')
+      .leftJoinAndSelect('lastMessage.messageRead', 'messageRead')
+      // .leftJoinAndSelect('messageRead.user', 'user')
       .where('ChatMember.user = :userId', { userId: user.id })
       .orderBy(`ChatMember.${filter.orderBy}`, filter.order)
       .skip(filter.skip)

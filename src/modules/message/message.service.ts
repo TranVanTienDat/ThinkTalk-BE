@@ -3,10 +3,7 @@ import { UpdateMessageDto } from './dto/update.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Message, MessageType } from 'src/entities/message.entity';
 import { EntityManager, Repository } from 'typeorm';
-import {
-  MessageStatus,
-  StatusMessage,
-} from 'src/entities/messageStatus.entity';
+import { MessageRead, StatusMessage } from 'src/entities/messageRead.entity';
 import { Chat } from 'src/entities/chat.entity';
 import { MessageFilter } from './dto/filter.dto';
 import { CreateMessageDto } from './dto/create.dto';
@@ -32,15 +29,14 @@ export class MessageService {
     const message = runInManager.create(Message, dto);
     const savedMessage = await runInManager.save(Message, message);
     // console.log('savedMessage', savedMessage);
-    const messageStatus = runInManager.create(MessageStatus, {
+    const messageStatus = runInManager.create(MessageRead, {
       message: savedMessage,
       user:
         message.type !== MessageType.SYSTEM
           ? { id: savedMessage.senderId }
           : null,
-      status: dto.status,
     });
-    await runInManager.save(MessageStatus, messageStatus);
+    await runInManager.save(MessageRead, messageStatus);
 
     await runInManager.update(Chat, savedMessage.chatId, {
       lastMessage: savedMessage,
@@ -48,7 +44,7 @@ export class MessageService {
 
     return await runInManager.findOne(Message, {
       where: { id: savedMessage.id },
-      relations: ['chat', 'user', 'messageStatus'],
+      relations: ['chat', 'user', 'messageRead'],
     });
   }
 
@@ -58,6 +54,8 @@ export class MessageService {
     const [data, total] = await queryBuilder
       .leftJoinAndSelect('message.chat', 'chat')
       .leftJoinAndSelect('message.user', 'user')
+      .leftJoinAndSelect('message.messageRead', 'messageRead')
+      .leftJoinAndSelect('messageRead.user', 'userRead')
       .where('message.chatId = :chatId', { chatId: id })
       .orderBy(`message.${filter.orderBy}`, filter.order)
       .skip(filter.skip)
@@ -68,8 +66,8 @@ export class MessageService {
     return new ResponsePageDto(plainToInstance(Message, data), page);
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} message`;
+  async findOne(id: string) {
+    return await this.messageRepo.findOneBy({ id });
   }
 
   update(id: number, updateMessageDto: UpdateMessageDto) {

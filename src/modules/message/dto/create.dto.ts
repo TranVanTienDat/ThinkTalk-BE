@@ -1,6 +1,6 @@
 import { IsEnum, IsNotEmpty, IsString, IsUUID } from 'class-validator';
 import { MessageType } from 'src/entities/message.entity';
-import { StatusMessage } from 'src/entities/messageStatus.entity';
+import { StatusMessage } from 'src/entities/messageRead.entity';
 
 export class CreateMessageDto {
   @IsNotEmpty()
@@ -17,7 +17,4 @@ export class CreateMessageDto {
   // @IsNotEmpty()
   @IsEnum(MessageType)
   type: MessageType;
-
-  @IsEnum(StatusMessage)
-  status: StatusMessage;
 }

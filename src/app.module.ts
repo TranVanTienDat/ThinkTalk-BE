@@ -15,6 +15,7 @@ import { DeviceModule } from './modules/device/device.module';
 import { SeedModule } from './modules/seed/seed.module';
 import { WsAuthGuard } from './common/guard/ws-auth.guard';
 import { MessageModule } from './modules/message/message.module';
+import { MessageReadModule } from './modules/message-read/message-read.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { MessageModule } from './modules/message/message.module';
     DeviceModule,
     SeedModule,
     MessageModule,
+    MessageReadModule,
   ],
   controllers: [AppController],
   providers: [

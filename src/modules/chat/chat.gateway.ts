@@ -1,4 +1,4 @@
-import { UseGuards, ValidationPipe } from '@nestjs/common';
+import { Body, UseGuards, ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import {
@@ -15,7 +15,7 @@ import { Roles } from 'src/common/decorators/roles.decorator';
 import { WsRolesGuard } from 'src/common/guard/roles.guard';
 import { WsJwtMiddleware } from 'src/common/middleware/wsAuth.middleware';
 import { ResponseDataWs } from 'src/common/types';
-import { StatusMessage } from 'src/entities/messageStatus.entity';
+import { StatusMessage } from 'src/entities/messageRead.entity';
 import { WsUser } from '../../common/decorators/ws-user.decorator';
 import { WsAuthGuard } from '../../common/guard/ws-auth.guard';
 import { ChatRoles } from '../../entities/chatMember.entity';
@@ -27,6 +27,7 @@ import { ChatFilter } from './dto/chat.filter';
 import { CreateChatDto } from './dto/create-chat.dto';
 import { RoomDto, SendMessageDto } from './dto/message.dto';
 import { UpdateChatDtoSW } from './dto/update-chat.dto';
+import { MessageReadService } from '../message-read/message-read.service';
 
 @WebSocketGateway({
   cors: {
@@ -43,6 +44,7 @@ export class ChatWebsocketGateway
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly msgService: MessageService,
+    private readonly msgReadService: MessageReadService,
   ) {}
   @WebSocketServer() server: Server;
 
@@ -340,7 +342,7 @@ export class ChatWebsocketGateway
         socket.join(`group-${chat.chatId}`);
       });
 
-      console.log('rooms: ', socket.rooms);
+      // console.log('rooms: ', socket.rooms);
       return { success: true, roomIds: data };
     } catch (error) {
       console.error('Error joining room:', error);
@@ -455,7 +457,6 @@ export class ChatWebsocketGateway
         chatId: chatId,
         type: messageType,
         senderId: user.id,
-        status: StatusMessage.Delivered,
       };
 
       const createdMsg = await this.msgService.create(msg);
@@ -479,6 +480,60 @@ export class ChatWebsocketGateway
       socket.emit('sended-message', {
         status: 'error',
         message: 'Có lỗi xảy ra khi gửi tin nhắn',
+        error: error.message,
+        data: data,
+        userId: user.id,
+      });
+      return { success: false, error: error.message };
+    }
+  }
+
+  @SubscribeMessage('user_online')
+  async connectNetwork(
+    @ConnectedSocket() socket: Socket,
+    @WsUser() user: UserPayload,
+  ) {}
+
+  @SubscribeMessage('messages:batch-read')
+  async trackingMessage(
+    @ConnectedSocket() socket: Socket,
+    @Body() data: { chatId: string; messageIds: string[] },
+    @WsUser() user: UserPayload,
+  ) {
+    try {
+      const dataMaping = data.messageIds.map((item) => ({
+        messageId: item,
+        userId: user.id,
+      }));
+
+      const msgRead = await this.msgReadService.create(dataMaping);
+      const dataReturn = {
+        chatId: data.chatId,
+        messageReads: msgRead.raw,
+      };
+      console.log('msgRead', msgRead);
+      const res: ResponseDataWs = {
+        status: 'success',
+        data: dataReturn,
+        message: 'Send message success!',
+      };
+
+      this.notifyGroupMembers(
+        `group-${data.chatId}`,
+        res,
+        this.server,
+        'message-read',
+      );
+      return {
+        success: true,
+        message: 'Gửi tin nhắn thành công',
+        data: msgRead,
+      };
+    } catch (error) {
+      console.log('error', error);
+      socket.emit('message-read', {
+        status: 'error',
+        message: 'Có lỗi xảy ra khi xem tin nhắn',
         error: error.message,
         data: data,
         userId: user.id,

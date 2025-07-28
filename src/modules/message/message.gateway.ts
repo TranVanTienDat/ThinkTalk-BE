@@ -11,9 +11,9 @@ import { CreateMessageDto } from './dto/create.dto';
 export class MessageGateway {
   constructor(private readonly messageService: MessageService) {}
 
-  @SubscribeMessage('createMessage')
-  create(@MessageBody() createMessageDto: CreateMessageDto) {
-    return this.messageService.create(createMessageDto);
+  @SubscribeMessage('create-message')
+  async create(@MessageBody() createMessageDto: CreateMessageDto) {
+    return await this.messageService.create(createMessageDto);
   }
 
   // @SubscribeMessage('findAllMessage')
@@ -21,18 +21,21 @@ export class MessageGateway {
   //   return this.messageService.findAll();
   // }
 
-  @SubscribeMessage('findOneMessage')
-  findOne(@MessageBody() id: number) {
-    return this.messageService.findOne(id);
+  @SubscribeMessage('find-one-message')
+  async findOne(@MessageBody() id: string) {
+    return await this.messageService.findOne(id);
   }
 
-  @SubscribeMessage('updateMessage')
-  update(@MessageBody() updateMessageDto: UpdateMessageDto) {
-    return this.messageService.update(updateMessageDto.id, updateMessageDto);
+  @SubscribeMessage('update-message')
+  async update(@MessageBody() updateMessageDto: UpdateMessageDto) {
+    return await this.messageService.update(
+      updateMessageDto.id,
+      updateMessageDto,
+    );
   }
 
-  @SubscribeMessage('removeMessage')
-  remove(@MessageBody() id: number) {
-    return this.messageService.remove(id);
+  @SubscribeMessage('remove-message')
+  async remove(@MessageBody() id: number) {
+    return await this.messageService.remove(id);
   }
 }

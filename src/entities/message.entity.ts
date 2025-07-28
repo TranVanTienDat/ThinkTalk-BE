@@ -2,7 +2,7 @@ import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
 import { BaseEntity } from '../common/entities/base.entity';
 import { Attachment } from './attachment.entity';
 import { Chat } from './chat.entity';
-import { MessageStatus } from './messageStatus.entity';
+import { MessageRead } from './messageRead.entity';
 import { Notification } from './notification.entity';
 import { User } from './user.entity';
 
@@ -40,11 +40,8 @@ export class Message extends BaseEntity {
   @JoinColumn({ name: 'chat_id' })
   chat: Chat;
 
-  @OneToMany(() => MessageStatus, (c) => c.message)
-  messageStatus: MessageStatus[];
-
-  // @OneToMany(() => Chat, (chat) => chat.lastMessage)
-  // chatsWhereIsLastMessage: Chat[];
+  @OneToMany(() => MessageRead, (read) => read.message)
+  messageRead: MessageRead[];
 
   @OneToMany(() => Notification, (notification) => notification.message)
   notifications: Notification[];

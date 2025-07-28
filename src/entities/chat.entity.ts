@@ -38,4 +38,7 @@ export class Chat extends BaseEntity {
 
   @OneToMany(() => ChatMember, (c) => c.chat, { onDelete: 'CASCADE' })
   chatMembers: ChatMember[];
+
+  @Column({ name: 'unread_count', default: null })
+  unreadCount: number;
 }

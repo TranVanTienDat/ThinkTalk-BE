@@ -7,18 +7,11 @@ export enum StatusMessage {
   Delivered = 'delivered',
   Read = 'read',
 }
-@Entity({ name: 'messageStatus' })
-export class MessageStatus extends BaseEntity {
-  @Column({
-    type: 'enum',
-    enum: StatusMessage,
-  })
-  status: StatusMessage;
-
-  @ManyToOne(() => Message, (message) => message.messageStatus)
-  @JoinColumn({ name: 'message_id' })
+@Entity({ name: 'messageRead' })
+export class MessageRead extends BaseEntity {
+  @ManyToOne(() => Message, (message) => message.messageRead)
   message: Message;
 
-  @ManyToOne(() => User, (user) => user.messageStatus)
+  @ManyToOne(() => User)
   user: User;
 }

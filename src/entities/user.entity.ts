@@ -2,7 +2,7 @@ import { Column, Entity, OneToMany } from 'typeorm';
 import { BaseEntity } from '../common/entities/base.entity';
 import { ChatMember } from './chatMember.entity';
 import { Message } from './message.entity';
-import { MessageStatus } from './messageStatus.entity';
+import { MessageRead } from './messageRead.entity';
 import { Notification } from './notification.entity';
 import { Device } from './device.entity';
 import { Access } from './access.entity';
@@ -44,8 +44,8 @@ export class User extends BaseEntity {
   @OneToMany(() => Notification, (notification) => notification.user)
   notifications: Notification[];
 
-  @OneToMany(() => MessageStatus, (ms) => ms.user)
-  messageStatus: MessageStatus[];
+  @OneToMany(() => MessageRead, (ms) => ms.user)
+  messageRead: MessageRead[];
 
   @OneToMany(() => Access, (a) => a.user, { cascade: true })
   access: Access[];
