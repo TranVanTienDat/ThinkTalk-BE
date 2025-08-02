@@ -12,6 +12,7 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { CacheDecorator } from 'src/common/decorators/cache.decorator';
 import { UserAuth } from '../../common/decorators/auth-user.decorator';
 import { AdminChatGuard } from '../../common/guard/admin-chat.guard';
 import { Chat } from '../../entities/chat.entity';
@@ -39,6 +40,11 @@ export class ChatController {
   }
 
   @Get()
+  // @CacheDecorator({
+  //   cacheForEachUser: true,
+  //   cacheKey: 'get-conversations',
+  //   cacheTTL: 600000,
+  // })
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get the conversation list' })
   @ApiResponse({ status: HttpStatus.OK, type: Chat })
@@ -49,14 +55,6 @@ export class ChatController {
   ) {
     return this.chatService.getChatByUserService(filter, user);
   }
-
-  // @Get()
-  // @ApiBearerAuth()
-  // @ApiOperation({ summary: 'Get the conversation' })
-  // @ApiResponse({ status: HttpStatus.OK, type: Chat })
-  // getConverseService(@UserAuth() user: UserPayload) {
-  //   return this.chatService.getConverseService(user.id);
-  // }
 
   @Patch(':id')
   @UseGuards(AdminChatGuard)
@@ -98,5 +96,18 @@ export class ChatController {
     @Param('userId') userId: string,
   ) {
     return await this.chatService.removeMemberService(userId, chatId);
+  }
+
+  @Get('/private/:userId')
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Check to see if the two users have a private group',
+  })
+  @ApiResponse({ status: HttpStatus.OK, type: Chat })
+  findPrivateChat(
+    @UserAuth() user: UserPayload,
+    @Param('userId') userId: string,
+  ) {
+    return this.chatService.findPrivateChatBetweenUsers(userId, user);
   }
 }

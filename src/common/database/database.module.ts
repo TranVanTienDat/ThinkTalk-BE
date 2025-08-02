@@ -13,7 +13,9 @@ import * as path from 'path';
         return {
           type: 'postgres',
           url: configService.get('DATABASE_URL'),
-          entities: [path.resolve(__dirname, '..') + '/**/*.entity{.ts,.js}'],
+          entities: [
+            path.resolve(__dirname, '../../entities/**/*.entity{.ts,.js}'),
+          ],
           autoLoadEntities: true,
           synchronize: true,
           ssl: false,

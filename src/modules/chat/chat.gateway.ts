@@ -511,7 +511,6 @@ export class ChatWebsocketGateway
         chatId: data.chatId,
         messageReads: msgRead.raw,
       };
-      console.log('msgRead', msgRead);
       const res: ResponseDataWs = {
         status: 'success',
         data: dataReturn,
