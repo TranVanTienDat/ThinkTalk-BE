@@ -3,19 +3,17 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { plainToInstance } from 'class-transformer';
 import { MessageType } from 'src/entities/message.entity';
 import { Repository } from 'typeorm';
+import { v4 as uuidv4 } from 'uuid';
 import { PageMetaDto } from '../../common/dto';
 import { ResponsePageDto } from '../../common/dto/response-page.dto';
-import { Chat } from '../../entities/chat.entity';
+import { Chat, ChatStatus } from '../../entities/chat.entity';
 import { ChatMember, ChatRoles } from '../../entities/chatMember.entity';
 import { User } from '../../entities/user.entity';
 import { UserPayload } from '../auth/dto/user-payload.dto';
 import { MessageService } from '../message/message.service';
-import { UsersService } from '../users/users.service';
 import { ChatFilter } from './dto/chat.filter';
 import { ChatMemberDto, CreateChatDto } from './dto/create-chat.dto';
 import { UpdateChatDto } from './dto/update-chat.dto';
-import { StatusMessage } from 'src/entities/messageRead.entity';
-import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class ChatService {
@@ -24,7 +22,6 @@ export class ChatService {
     private chatRepo: Repository<Chat>,
     @InjectRepository(ChatMember)
     private chatMemberRepo: Repository<ChatMember>,
-    private userService: UsersService,
     private messageService: MessageService,
   ) {}
 
@@ -73,11 +70,6 @@ export class ChatService {
         search: `%${filter.search}%`,
       });
     }
-    // if (id) {
-    //   queryBuilder.andWhere('LOWER(chat.) LIKE LOWER(:search)', {
-    //     search: `%${filter.i}%`,
-    //   });
-    // }
 
     const [chats, chatCount] = await queryBuilder
       .orderBy(`object_configs.${filter.orderBy}`, filter.order)
@@ -209,5 +201,20 @@ export class ChatService {
     });
 
     return chatMember?.role;
+  }
+
+  public async findPrivateChatBetweenUsers(id: string, user: UserPayload) {
+    const chat = await this.chatRepo
+      .createQueryBuilder('chat')
+      .innerJoin('chat.chatMembers', 'cm1', 'cm1.user.id = :userId1', {
+        userId1: user.id,
+      })
+      .innerJoin('chat.chatMembers', 'cm2', 'cm2.user.id = :userId2', {
+        userId2: id,
+      })
+      .where('chat.type = :chatType', { chatType: ChatStatus.Pr })
+      .getOne();
+
+    return { chatId: chat?.id ?? null };
   }
 }

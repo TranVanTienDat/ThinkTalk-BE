@@ -1,5 +1,7 @@
 import {
   BadGatewayException,
+  forwardRef,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -9,12 +11,21 @@ import { Repository } from 'typeorm';
 import { verifyPassword } from '../../common/utils/security.util';
 import { User } from '../../entities/user.entity';
 import { BaseAuthDto, LoginDto } from '../auth/dto/auth.dto';
+import { UserFilter } from './dto/filter.dto';
+import { PageDto, PageMetaDto } from 'src/common/dto';
+import { ResponsePageDto } from 'src/common/dto/response-page.dto';
+import { plainToInstance } from 'class-transformer';
+import { UserPayload } from '../auth/dto/user-payload.dto';
+import { Chat, ChatStatus } from 'src/entities/chat.entity';
+import { ChatService } from '../chat/chat.service';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
     private userRepository: Repository<User>,
+    @Inject(forwardRef(() => ChatService))
+    private chatService: ChatService,
   ) {}
 
   public getRepository(): Repository<User> {
@@ -63,5 +74,49 @@ export class UsersService {
     }
 
     return user;
+  }
+
+  public async getUserWithChatPrivateService(
+    filter: UserFilter,
+    user: UserPayload,
+  ) {
+    const queryBuilder = this.userRepository.createQueryBuilder('user');
+
+    if (filter.search) {
+      queryBuilder.andWhere(
+        '(LOWER(user.fullName) LIKE LOWER(:search) OR LOWER(user.nickname) LIKE LOWER(:search))',
+        { search: `%${filter.search}%` },
+      );
+    }
+
+    // Lọc user khác current user
+    queryBuilder.andWhere('user.id != :currentUserId', {
+      currentUserId: user.id,
+    });
+
+    const [users, count] = await queryBuilder
+      .take(filter.limit)
+      .skip(filter.skip)
+      .getManyAndCount();
+
+    const newUsers = await Promise.all(
+      users.map(async (item) => {
+        const chatId = await this.chatService.findPrivateChatBetweenUsers(
+          item.id,
+          user,
+        );
+        return { ...item, ...chatId };
+      }),
+    );
+
+    const pageMetaDto = new PageMetaDto({
+      pageDto: filter.pageDto,
+      total: count,
+    });
+
+    return new ResponsePageDto(
+      newUsers.map((u) => plainToInstance(User, { ...u })),
+      pageMetaDto,
+    );
   }
 }

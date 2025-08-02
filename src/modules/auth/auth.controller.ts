@@ -6,6 +6,7 @@ import { AuthDto, LoginDto } from './dto/auth.dto';
 import { UserData } from './dto/user-data.dto';
 import { UserAuth } from '../../common/decorators/auth-user.decorator';
 import { UserPayload } from './dto/user-payload.dto';
+import { CacheDecorator } from 'src/common/decorators/cache.decorator';
 
 @Controller('auth')
 export class AuthController {
@@ -37,6 +38,11 @@ export class AuthController {
   @ApiOperation({ summary: 'Get me' })
   @ApiResponse({ status: HttpStatus.OK, type: UserData })
   @ApiBearerAuth()
+  @CacheDecorator({
+    cacheForEachUser: true,
+    cacheKey: 'get_me',
+    cacheTTL: 6000000,
+  })
   @Get('get-me')
   async getMe(@UserAuth() userData: UserPayload) {
     return this.authService.getMe(userData);

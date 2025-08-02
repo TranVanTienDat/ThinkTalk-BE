@@ -1,4 +1,11 @@
-import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
+import {
+  Column,
+  DeleteDateColumn,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  OneToMany,
+} from 'typeorm';
 import { ChatMember } from './chatMember.entity';
 import { Message } from './message.entity';
 import { BaseEntity } from '../common/entities/base.entity';
@@ -41,4 +48,7 @@ export class Chat extends BaseEntity {
 
   @Column({ name: 'unread_count', default: null })
   unreadCount: number;
+
+  @DeleteDateColumn()
+  deleted_at: Date;
 }

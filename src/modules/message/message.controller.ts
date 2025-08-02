@@ -10,6 +10,7 @@ import { ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { Message } from 'src/entities/message.entity';
 import { MessageFilter } from './dto/filter.dto';
 import { MessageService } from './message.service';
+import { CacheKey, CacheTTL } from '@nestjs/cache-manager';
 
 @Controller('message')
 export class MessageController {
