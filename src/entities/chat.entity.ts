@@ -48,7 +48,4 @@ export class Chat extends BaseEntity {
 
   @Column({ name: 'unread_count', default: null })
   unreadCount: number;
-
-  @DeleteDateColumn()
-  deleted_at: Date;
 }

@@ -5,6 +5,8 @@ import { UsersService } from '../users/users.service';
 import { User, UserStatus } from '../../entities/user.entity';
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { Public } from '../../common/decorators/public.decorator';
+import { UserPayload } from '../auth/dto/user-payload.dto';
+import { UserAuth } from 'src/common/decorators/auth-user.decorator';
 
 @Controller('seed')
 export class SeedController {
@@ -22,7 +24,7 @@ export class SeedController {
   @Get('/chat')
   @ApiOperation({ summary: 'Create chats' })
   @ApiResponse({ status: HttpStatus.OK })
-  createSeedChat() {
-    return this.seedService.createChatService();
+  createSeedChat(@UserAuth() user: UserPayload) {
+    return this.seedService.createChatService(user);
   }
 }

@@ -8,3 +8,7 @@ export enum Order {
   ASC = 'ASC',
   DESC = 'DESC',
 }
+
+export enum QUEUES {
+  MSG_QUEUE = 'TINKTALK_QUEUE.MSG',
+}

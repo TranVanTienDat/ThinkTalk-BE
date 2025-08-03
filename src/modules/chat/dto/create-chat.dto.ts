@@ -11,6 +11,7 @@ import { Type } from 'class-transformer';
 import { ChatRoles } from '../../../entities/chatMember.entity';
 import { ApiProperty } from '@nestjs/swagger';
 import { ChatStatus } from '../../../entities/chat.entity';
+import { MessageType } from 'src/entities/message.entity';
 
 export class ChatMemberDto {
   @ApiProperty({ description: 'userId', example: '123' })
@@ -24,11 +25,25 @@ export class ChatMemberDto {
   role: ChatRoles = ChatRoles.MEMBER;
 }
 
+class MessageTemp {
+  @ApiProperty({ example: 'hello' })
+  @IsString()
+  content: string;
+
+  @ApiProperty({ example: 'text' })
+  @IsEnum(MessageType)
+  type: MessageType;
+}
+
 export class CreateChatDto {
   @ApiProperty({ description: 'name', example: 'Group' })
   @IsString()
   @IsNotEmpty()
   name: string;
+
+  @ApiProperty({ description: 'avatar', example: 'link image' })
+  @IsString()
+  avatar?: string;
 
   @ApiProperty({ description: 'type', example: 'private', default: 'group' })
   @IsEnum(ChatStatus)
@@ -43,4 +58,13 @@ export class CreateChatDto {
   @ValidateNested({ each: true })
   @Type(() => ChatMemberDto)
   chatMembers: ChatMemberDto[];
+
+  @ApiProperty({
+    description: 'Content message',
+    example: [{ content: '123', type: 'text' }],
+  })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => MessageTemp)
+  message?: MessageTemp;
 }

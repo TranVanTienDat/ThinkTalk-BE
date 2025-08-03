@@ -21,7 +21,7 @@ export class ChatMember extends BaseEntity {
   @JoinColumn({ name: 'user_id' })
   user: User;
 
-  @ManyToOne(() => Chat, (c) => c.chatMembers)
+  @ManyToOne(() => Chat, (c) => c.chatMembers, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'chat_id' })
   chat: Chat;
 }

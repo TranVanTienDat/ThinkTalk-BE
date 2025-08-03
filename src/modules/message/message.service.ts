@@ -25,24 +25,53 @@ export class MessageService {
     manager?: EntityManager,
   ): Promise<Message> {
     const runInManager = manager ?? this.messageRepo.manager;
+    if (!manager) {
+      return await this.messageRepo.manager.transaction(async (txManager) => {
+        return this._createWithManager(dto, txManager);
+      });
+    }
+    const message = manager.create(Message, dto);
+    const savedMessage = await manager.save(Message, message);
 
-    const message = runInManager.create(Message, dto);
-    const savedMessage = await runInManager.save(Message, message);
-    // console.log('savedMessage', savedMessage);
-    const messageStatus = runInManager.create(MessageRead, {
+    const messageStatus = manager.create(MessageRead, {
       message: savedMessage,
       user:
         message.type !== MessageType.SYSTEM
           ? { id: savedMessage.senderId }
           : null,
     });
-    await runInManager.save(MessageRead, messageStatus);
+    await manager.save(MessageRead, messageStatus);
 
-    await runInManager.update(Chat, savedMessage.chatId, {
+    await manager.update(Chat, savedMessage.chatId, {
       lastMessage: savedMessage,
     });
 
     return await runInManager.findOne(Message, {
+      where: { id: savedMessage.id },
+      relations: ['chat', 'user', 'messageRead'],
+    });
+  }
+
+  private async _createWithManager(
+    dto: CreateMessageDto,
+    manager: EntityManager,
+  ): Promise<Message> {
+    const message = manager.create(Message, dto);
+    const savedMessage = await manager.save(Message, message);
+    const messageStatus = manager.create(MessageRead, {
+      message: savedMessage,
+      user:
+        message.type !== MessageType.SYSTEM
+          ? { id: savedMessage.senderId }
+          : null,
+    });
+    await manager.save(MessageRead, messageStatus);
+
+    await manager.update(Chat, savedMessage.chatId, {
+      lastMessage: savedMessage,
+    });
+
+    return await manager.findOne(Message, {
       where: { id: savedMessage.id },
       relations: ['chat', 'user', 'messageRead'],
     });
