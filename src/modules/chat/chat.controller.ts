@@ -36,7 +36,7 @@ export class ChatController {
     @Body(new ValidationPipe({ transform: true })) createChatDto: CreateChatDto,
   ) {
     createChatDto.chatMembers.push({ userId: user.id, role: ChatRoles.ADMIN });
-    return this.chatService.createService(createChatDto);
+    return this.chatService.createService(createChatDto, user);
   }
 
   @Get()

@@ -9,6 +9,7 @@ import { User } from '../../entities/user.entity';
 import { AuthService } from '../auth/auth.service';
 import { ChatService } from '../chat/chat.service';
 import { CreateChatDto } from '../chat/dto/create-chat.dto';
+import { UserPayload } from '../auth/dto/user-payload.dto';
 @Injectable()
 export class SeedService {
   constructor(
@@ -32,7 +33,7 @@ export class SeedService {
     await Promise.all(users.map((user) => this.authService.register(user)));
   }
 
-  async createChatService(): Promise<any> {
+  async createChatService(user: UserPayload): Promise<any> {
     const users = await this.userRepo.find();
     const chats: CreateChatDto[] = Array.from({ length: 10 }, (_, i) => ({
       name: `${faker.internet.displayName()}`,
@@ -44,7 +45,9 @@ export class SeedService {
       })),
     }));
 
-    const createPromises = chats.map((c) => this.chatService.createService(c));
+    const createPromises = chats.map((c) =>
+      this.chatService.createService(c, user),
+    );
     await Promise.all(createPromises);
   }
 }

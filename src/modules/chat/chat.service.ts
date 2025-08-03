@@ -25,15 +25,15 @@ export class ChatService {
     private messageService: MessageService,
   ) {}
 
-  async createService(createChatDto: CreateChatDto) {
-    const { name, type, chatMembers } = createChatDto;
+  async createService(createChatDto: CreateChatDto, user: UserPayload) {
+    const { name, type, chatMembers, avatar, message } = createChatDto;
 
     return await this.chatRepo.manager.transaction(async (manager) => {
       const chat = this.chatRepo.create({
         name,
         type,
         userIds: chatMembers.map((chatMember) => chatMember.userId),
-        avatar: `https://i.pravatar.cc/150?u=${uuidv4()}`,
+        avatar: avatar ?? `https://i.pravatar.cc/150?u=${uuidv4()}`,
       });
       const savedChat = await manager.save(chat);
 
@@ -47,14 +47,17 @@ export class ChatService {
       });
       await manager.insert(ChatMember, members);
 
-      const msg = {
-        content: `Tạo thành công nhóm ${savedChat.name}`,
-        chatId: savedChat.id,
-        createdAt: new Date(),
-        type: MessageType.SYSTEM,
-      };
+      if (message) {
+        const msg = {
+          content: message.content,
+          chatId: savedChat.id,
+          user: user,
+          createdAt: new Date(),
+          type: message.type,
+        };
 
-      await this.messageService.create(msg, manager);
+        await this.messageService.create(msg, manager);
+      }
 
       return await manager.findOne(Chat, {
         where: { id: savedChat.id },
@@ -132,7 +135,6 @@ export class ChatService {
   }
 
   async getConverseService(id: string) {
-    console.log('id', id);
     return await this.chatRepo.findOne({
       where: { id },
       relations: {

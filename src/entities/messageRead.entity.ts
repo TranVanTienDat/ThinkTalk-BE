@@ -9,7 +9,9 @@ export enum StatusMessage {
 }
 @Entity({ name: 'messageRead' })
 export class MessageRead extends BaseEntity {
-  @ManyToOne(() => Message, (message) => message.messageRead)
+  @ManyToOne(() => Message, (message) => message.messageRead, {
+    onDelete: 'CASCADE',
+  })
   message: Message;
 
   @ManyToOne(() => User)

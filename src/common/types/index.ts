@@ -8,3 +8,12 @@ export type ResponseDataWs = {
   statusCode?: string | number;
   timestamp?: string;
 };
+
+export type ErrorWs = {
+  status: 'success' | 'error';
+  message: string;
+  data?: any;
+  sender?: UserPayload | 'system';
+  statusCode?: string | number;
+  timestamp?: string;
+};

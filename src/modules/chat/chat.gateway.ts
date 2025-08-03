@@ -154,10 +154,9 @@ export class ChatWebsocketGateway
     try {
       data.chatMembers.push({ userId: user.id, role: ChatRoles.ADMIN });
 
-      // Tạo nhóm chat
-      const newChat = await this.chatService.createService(data);
+      const newChat = await this.chatService.createService(data, user);
+      await this.joinRoom([{ chatId: newChat.id }], socket);
 
-      const rooms = await this.joinRoom([{ chatId: newChat.id }], socket);
       const res: ResponseDataWs = {
         status: 'success',
         data: newChat,
@@ -168,8 +167,8 @@ export class ChatWebsocketGateway
       this.notifyGroupMembers(
         `group-${newChat.id}`,
         res,
-        socket,
-        'group-created',
+        this.server,
+        'created-group',
       );
 
       return { success: true, chat: newChat };
@@ -331,26 +330,13 @@ export class ChatWebsocketGateway
     @ConnectedSocket() socket: Socket,
   ) {
     try {
-      if (!data.length) {
-        socket.emit('room-join-failed', {
-          success: false,
-          message: 'Bạn không có quyền tham gia phòng này',
-        });
-        return { success: false, message: 'Không có quyền tham gia' };
-      }
       data.forEach((chat) => {
         socket.join(`group-${chat.chatId}`);
       });
 
-      // console.log('rooms: ', socket.rooms);
       return { success: true, roomIds: data };
     } catch (error) {
       console.error('Error joining room:', error);
-      socket.emit('room-join-failed', {
-        success: false,
-        message: 'Có lỗi xảy ra khi tham gia phòng',
-        error: error.message,
-      });
       return { success: false, error: error.message };
     }
   }
@@ -442,12 +428,11 @@ export class ChatWebsocketGateway
   ) {
     try {
       const { chatId, message, messageType } = data;
-
       const conversation = await this.chatService.getConverseService(chatId);
-      if (!conversation || !conversation.userIds.includes(user.id)) {
-        socket.emit('message-send-failed', {
-          success: false,
+      if (!conversation) {
+        socket.emit('receive-message', {
           message: 'Bạn không có quyền gửi tin nhắn trong nhóm này',
+          status: 'error',
         });
         return { success: false, message: 'Không có quyền gửi tin nhắn' };
       }
@@ -458,7 +443,6 @@ export class ChatWebsocketGateway
         type: messageType,
         senderId: user.id,
       };
-
       const createdMsg = await this.msgService.create(msg);
 
       const res: ResponseDataWs = {
@@ -471,13 +455,13 @@ export class ChatWebsocketGateway
         `group-${chatId}`,
         res,
         this.server,
-        'sended-message',
+        'receive-message',
       );
 
       return { success: true, message: 'Gửi tin nhắn thành công', data: data };
     } catch (error) {
       console.error('Error sending message:', error);
-      socket.emit('sended-message', {
+      socket.emit('receive-message', {
         status: 'error',
         message: 'Có lỗi xảy ra khi gửi tin nhắn',
         error: error.message,
