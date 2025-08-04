@@ -41,7 +41,7 @@ export class User extends BaseEntity {
   @OneToMany(() => ChatMember, (chatMember) => chatMember.user)
   chatMembers: ChatMember[];
 
-  @OneToMany(() => Notification, (notification) => notification.user)
+  @OneToMany(() => Notification, (notification) => notification.receiverId)
   notifications: Notification[];
 
   @OneToMany(() => MessageRead, (ms) => ms.user)

@@ -8,30 +8,32 @@ import {
 import { BaseEntity } from '../common/entities/base.entity';
 import { Message } from './message.entity';
 import { User } from './user.entity';
-export enum NotificationType {
-  Message = 'message',
-  GroupInvite = 'group_invite',
-}
+import { NotificationJobType } from 'src/common/utils/constant.util';
+
 @Entity({ name: 'notification' })
 export class Notification extends BaseEntity {
   @Column({
     type: 'enum',
-    enum: NotificationType,
+    enum: NotificationJobType,
   })
-  type: NotificationType;
+  type: NotificationJobType;
 
-  @CreateDateColumn({
-    name: 'read_at',
-    type: 'timestamp',
-    default: () => 'CURRENT_TIMESTAMP',
-  })
-  read_at: Date;
+  @Column({ name: 'is_read' })
+  isRead: boolean;
 
   @ManyToOne(() => User, (user) => user.notifications)
-  @JoinColumn({ name: 'user_id' })
-  user: User;
+  @JoinColumn({ name: 'receiver_Id' })
+  receiverId: User;
 
-  @ManyToOne(() => Message, (m) => m.notifications)
-  @JoinColumn({ name: 'message_id' })
-  message: Message;
+  @Column({ name: 'target', nullable: true })
+  target: string;
+
+  @Column({ name: 'actor', nullable: true })
+  actor: string;
+
+  @Column({ name: 'message' })
+  message: string;
+
+  @Column({ type: 'jsonb', nullable: true })
+  data: Record<string, any>;
 }

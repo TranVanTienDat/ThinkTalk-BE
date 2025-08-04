@@ -14,6 +14,9 @@ import { MessageService } from '../message/message.service';
 import { ChatFilter } from './dto/chat.filter';
 import { ChatMemberDto, CreateChatDto } from './dto/create-chat.dto';
 import { UpdateChatDto } from './dto/update-chat.dto';
+import { NotificationService } from '../notification/notification.service';
+import { CreateNotificationDto } from '../notification/dto/create-notification.dto';
+import { NotificationJobType } from 'src/common/utils/constant.util';
 
 @Injectable()
 export class ChatService {
@@ -23,6 +26,7 @@ export class ChatService {
     @InjectRepository(ChatMember)
     private chatMemberRepo: Repository<ChatMember>,
     private messageService: MessageService,
+    private notificationService: NotificationService,
   ) {}
 
   async createService(createChatDto: CreateChatDto, user: UserPayload) {
@@ -59,10 +63,29 @@ export class ChatService {
         await this.messageService.create(msg, manager);
       }
 
-      return await manager.findOne(Chat, {
+      const getChat = await manager.findOne(Chat, {
         where: { id: savedChat.id },
         relations: ['chatMembers', 'messages', 'lastMessage'],
       });
+
+      const notification: CreateNotificationDto<Partial<Chat>> = {
+        data: {
+          id: getChat.id,
+          name: getChat.name,
+          avatar: getChat.avatar,
+        },
+        message: `${user.fullName} đã tạo nhóm ${getChat.name}`,
+        type: NotificationJobType.GROUP_CREATED,
+        actor: user.fullName,
+        target: `Nhóm ${getChat.name}`,
+        receiverIds: chatMembers.map((chatMember) => chatMember.userId),
+      };
+
+      await this.notificationService.create({
+        ...notification,
+      });
+
+      return getChat;
     });
   }
 

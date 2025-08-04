@@ -1,11 +1,26 @@
 import { Injectable } from '@nestjs/common';
 import { CreateNotificationDto } from './dto/create-notification.dto';
 import { UpdateNotificationDto } from './dto/update-notification.dto';
+import { InjectQueue } from '@nestjs/bullmq';
+import { NotificationJobName, QUEUES } from 'src/common/utils/constant.util';
+import { Queue } from 'bullmq';
 
 @Injectable()
 export class NotificationService {
-  create(createNotificationDto: CreateNotificationDto) {
-    return 'This action adds a new notification';
+  constructor(
+    @InjectQueue(QUEUES.NOTIFICATION_QUEUE) private NotificationQueue: Queue,
+  ) {}
+
+  async create(notification: CreateNotificationDto) {
+    await this.NotificationQueue.add(
+      NotificationJobName.GROUP_CREATED,
+      {
+        ...notification,
+      },
+      {
+        priority: 1,
+      },
+    );
   }
 
   findAll() {

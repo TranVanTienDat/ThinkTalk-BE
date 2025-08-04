@@ -16,8 +16,6 @@ export class MessageService {
   constructor(
     @InjectRepository(Message)
     private readonly messageRepo: Repository<Message>,
-    // private readonly messageStatusRepo: Repository<MessageStatus>,
-    // private readonly chatRepo: Repository<Chat>,
   ) {}
 
   async create(

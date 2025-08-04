@@ -43,9 +43,6 @@ export class Message extends BaseEntity {
   @OneToMany(() => MessageRead, (read) => read.message)
   messageRead: MessageRead[];
 
-  @OneToMany(() => Notification, (notification) => notification.message)
-  notifications: Notification[];
-
   @OneToMany(() => Attachment, (a) => a.message)
   attachments: Attachment[];
 

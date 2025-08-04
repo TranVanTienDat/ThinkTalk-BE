@@ -16,9 +16,9 @@ import { UsersModule } from './modules/users/users.module';
 import { CacheCustomModule } from './common/cache-custom/cache-custom.module';
 import { ConfigModule } from './common/config/config.module';
 import { DatabaseModule } from './common/database/database.module';
-import { NotificationModule } from './notification/notification.module';
 import { BullModule } from '@nestjs/bullmq';
 import { QUEUES } from './common/utils/constant.util';
+import { NotificationModule } from './modules/notification/notification.module';
 
 @Module({
   imports: [
@@ -40,9 +40,6 @@ import { QUEUES } from './common/utils/constant.util';
         },
       }),
       inject: [ConfigService],
-    }),
-    BullModule.registerQueue({
-      name: QUEUES.MSG_QUEUE,
     }),
     DatabaseModule,
     UsersModule,

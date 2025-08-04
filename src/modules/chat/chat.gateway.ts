@@ -406,7 +406,7 @@ export class ChatWebsocketGateway
   }
 
   // Phương thức hỗ trợ chỉ gửi thông báo đến các thành viên khác trong nhóm
-  private notifyGroupMembers(
+  public notifyGroupMembers(
     roomId: string,
     data: ResponseDataWs,
     socket: Socket | Server,

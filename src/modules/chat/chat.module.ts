@@ -8,6 +8,7 @@ import { UsersModule } from '../users/users.module';
 import { ChatWebsocketGateway } from './chat.gateway';
 import { MessageModule } from '../message/message.module';
 import { MessageReadModule } from '../message-read/message-read.module';
+import { NotificationModule } from '../notification/notification.module';
 
 @Module({
   imports: [
@@ -15,9 +16,10 @@ import { MessageReadModule } from '../message-read/message-read.module';
     forwardRef(() => UsersModule),
     MessageModule,
     MessageReadModule,
+    NotificationModule,
   ],
   controllers: [ChatController],
   providers: [ChatService, ChatWebsocketGateway],
-  exports: [ChatService],
+  exports: [ChatService, ChatWebsocketGateway],
 })
 export class ChatModule {}
