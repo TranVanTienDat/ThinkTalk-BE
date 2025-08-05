@@ -2,10 +2,16 @@ import { Column, Entity, JoinColumn, ManyToOne, OneToOne } from 'typeorm';
 import { BaseEntity } from '../common/entities/base.entity';
 import { User } from './user.entity';
 import { Access } from './access.entity';
+import { IsEnum } from 'class-validator';
+
+enum DeviceStatus {
+  LOGIN = 'login',
+  LOGOUT = 'logout',
+}
 
 @Entity({ name: 'device' })
 export class Device extends BaseEntity {
-  @ManyToOne(() => User, (user) => user.devices)
+  @ManyToOne(() => User, (user) => user.devices, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'user_id' })
   user: User;
 
@@ -18,4 +24,12 @@ export class Device extends BaseEntity {
 
   @Column({ name: 'device_token', nullable: true, default: null })
   device_token: string;
+
+  @Column({ type: 'jsonb', nullable: true })
+  @Column({ type: 'jsonb', nullable: true })
+  info: Record<string, any>;
+
+  @Column({ type: 'enum', enum: DeviceStatus, nullable: true })
+  @IsEnum(DeviceStatus)
+  status: DeviceStatus;
 }

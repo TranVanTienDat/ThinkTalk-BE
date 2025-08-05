@@ -77,7 +77,7 @@ export class MessageService {
 
   async findByConversation(id: string, filter: MessageFilter) {
     const queryBuilder = this.messageRepo.createQueryBuilder('message');
-
+    console.log('filter', filter);
     const [data, total] = await queryBuilder
       .leftJoinAndSelect('message.chat', 'chat')
       .leftJoinAndSelect('message.user', 'user')
@@ -88,6 +88,7 @@ export class MessageService {
       .skip(filter.skip)
       .take(filter.limit)
       .getManyAndCount();
+    console.log('data', data);
 
     const page = new PageMetaDto({ pageDto: filter.pageDto, total });
     return new ResponsePageDto(plainToInstance(Message, data), page);

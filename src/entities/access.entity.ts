@@ -9,7 +9,7 @@ import { User } from './user.entity';
 
 @Entity({ name: 'access' })
 export class Access {
-  @ManyToOne(() => User, (user) => user.access)
+  @ManyToOne(() => User, (user) => user.access, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'user_id' })
   user: User;
 

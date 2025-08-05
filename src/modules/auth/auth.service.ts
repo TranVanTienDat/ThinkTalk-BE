@@ -33,8 +33,8 @@ export class AuthService {
 
   async register(registerDto: AuthDto) {
     const { email, password, fullName, device_token, type } = registerDto;
-
     const isUser = await this.userService.findUserByEmailService(registerDto);
+
     if (isUser) {
       throw new BadRequestException('Email has existed!');
     }

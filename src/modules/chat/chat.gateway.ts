@@ -65,6 +65,17 @@ export class ChatWebsocketGateway
     const user = socket.data.user as UserPayload;
   }
 
+  private async getSocketsForUsers(userIds: string[]): Promise<Socket[]> {
+    const sockets: Socket[] = [];
+    const allSockets = await this.server.fetchSockets();
+    for (const socket of allSockets) {
+      if (userIds.includes(socket.data.user?.id)) {
+        sockets.push(socket as any);
+      }
+    }
+    return sockets;
+  }
+
   @SubscribeMessage('get-conversations')
   async getConversations(
     @ConnectedSocket() socket: Socket,
@@ -156,6 +167,14 @@ export class ChatWebsocketGateway
 
       const newChat = await this.chatService.createService(data, user);
       await this.joinRoom([{ chatId: newChat.id }], socket);
+
+      const memberSockets = await this.getSocketsForUsers(
+        data.chatMembers.map((m) => m.userId),
+      );
+
+      memberSockets.forEach(async (memberSocket) => {
+        await this.joinRoom([{ chatId: newChat.id }], memberSocket);
+      });
 
       const res: ResponseDataWs = {
         status: 'success',

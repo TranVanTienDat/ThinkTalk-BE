@@ -1,7 +1,7 @@
 export enum Constant {
   LIMIT = 10,
   PAGE = 1,
-  SORT_COLUMN = 'updatedAt',
+  SORT_COLUMN = 'createdAt',
 }
 
 export enum Order {
