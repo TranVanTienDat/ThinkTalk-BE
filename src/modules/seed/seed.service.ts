@@ -28,6 +28,7 @@ export class SeedService {
       fullName: faker.internet.displayName(),
       device_token: `token${i + 1}`,
       type: i % 2 === 0 ? 'android' : 'ios',
+      info: {},
     }));
 
     await Promise.all(users.map((user) => this.authService.register(user)));

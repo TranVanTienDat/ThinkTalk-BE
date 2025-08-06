@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsNotEmpty } from 'class-validator';
+import { IsEmail, IsJSON, IsNotEmpty } from 'class-validator';
 
 export class BaseAuthDto {
   @ApiProperty({ description: 'Email', example: '123@gmail.com' })
@@ -23,6 +23,22 @@ export class AuthDto extends BaseAuthDto {
   @ApiProperty({ description: 'Fullname', example: 'Nguyen Van A' })
   @IsNotEmpty()
   fullName: string;
+
+  @ApiProperty({
+    description: 'Additional info as JSON object',
+    example: { browser: 'chrome' },
+  })
+  @IsNotEmpty()
+  info: Record<string, any>;
 }
 
-export class LoginDto extends BaseAuthDto {}
+export class LoginDto extends BaseAuthDto {
+  @IsNotEmpty()
+  info: Record<string, any>;
+}
+
+export class LogoutDto {
+  @ApiProperty({ description: 'Device token', example: '32435ggbd5' })
+  @IsNotEmpty()
+  device_token: string;
+}

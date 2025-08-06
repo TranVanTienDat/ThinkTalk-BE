@@ -1,8 +1,15 @@
-import { Body, Controller, Get, HttpStatus, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpStatus,
+  Post,
+  ValidationPipe,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { Public } from '../../common/decorators/public.decorator';
 import { AuthService } from './auth.service';
-import { AuthDto, LoginDto } from './dto/auth.dto';
+import { AuthDto, LoginDto, LogoutDto } from './dto/auth.dto';
 import { UserData } from './dto/user-data.dto';
 import { UserAuth } from '../../common/decorators/auth-user.decorator';
 import { UserPayload } from './dto/user-payload.dto';
@@ -31,8 +38,11 @@ export class AuthController {
   @ApiResponse({ status: HttpStatus.OK })
   @ApiBearerAuth()
   @Post('logout')
-  async logout(@UserAuth() userData: UserPayload): Promise<void> {
-    return this.authService.logoutService(userData);
+  async logout(
+    @Body(new ValidationPipe({ transform: true })) logout: LogoutDto,
+    @UserAuth() userData: UserPayload,
+  ) {
+    return await this.authService.logoutService(logout);
   }
 
   @ApiOperation({ summary: 'Get me' })

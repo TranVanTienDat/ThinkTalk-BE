@@ -3,15 +3,20 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { User } from './user.entity';
+import { Device } from './device.entity';
 
 @Entity({ name: 'access' })
 export class Access {
-  @ManyToOne(() => User, (user) => user.access, { onDelete: 'CASCADE' })
+  @ManyToOne(() => User, (user) => user.access)
   @JoinColumn({ name: 'user_id' })
   user: User;
+
+  @OneToOne(() => Device, (device) => device.access)
+  device: Device;
 
   @PrimaryGeneratedColumn('uuid')
   id: string;

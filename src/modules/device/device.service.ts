@@ -14,9 +14,9 @@ export class DeviceService {
     return `This action returns all device`;
   }
 
-  async findOneService(id: string) {
+  async findOneService(key: string, value: string) {
     const result = await this.deviceRepo.findOne({
-      where: { id: id },
+      where: { [key]: value },
       relations: {
         access: true,
       },
@@ -24,7 +24,7 @@ export class DeviceService {
     return result;
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} device`;
+  async remove(device_token: string) {
+    return await this.deviceRepo.delete({ device_token: device_token });
   }
 }

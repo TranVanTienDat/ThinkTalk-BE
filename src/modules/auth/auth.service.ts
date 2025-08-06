@@ -16,23 +16,28 @@ import { Device } from '../../entities/device.entity';
 import { User, UserStatus } from '../../entities/user.entity';
 import { AccessService } from '../access/access.service';
 import { UsersService } from '../users/users.service';
-import { AuthDto, LoginDto } from './dto/auth.dto';
+import { AuthDto, LoginDto, LogoutDto } from './dto/auth.dto';
 import { UserData } from './dto/user-data.dto';
 import { UserPayload } from './dto/user-payload.dto';
 import { v4 as uuidv4 } from 'uuid';
+import { DeviceService } from '../device/device.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     @InjectRepository(User)
     private userRepo: Repository<User>,
+    @InjectRepository(Access)
+    private accessRepo: Repository<Access>,
+
     private readonly userService: UsersService,
+    private readonly deviceService: DeviceService,
     private readonly accessService: AccessService,
     private readonly configService: ConfigService,
   ) {}
 
   async register(registerDto: AuthDto) {
-    const { email, password, fullName, device_token, type } = registerDto;
+    const { email, password, fullName, device_token, type, info } = registerDto;
     const isUser = await this.userService.findUserByEmailService(registerDto);
 
     if (isUser) {
@@ -71,6 +76,7 @@ export class AuthService {
         access,
         device_token,
         type,
+        info,
       });
 
       await manager.save(device);
@@ -88,20 +94,39 @@ export class AuthService {
   }
 
   async login(userPayLoad: LoginDto) {
-    const { device_token } = userPayLoad;
+    const { device_token, info } = userPayLoad;
     const user = await this.userService.findUserService(userPayLoad);
+    const oldDevice = user.devices.find(
+      (device) => device.device_token === device_token,
+    );
+    if (!user) throw new NotFoundException('Not found user');
+
     const accessToken = await this.generateAccessToken(user);
     const refreshToken = await this.generateRefreshToken(user);
 
-    const device = user.devices.find(
-      (device) => device.device_token === device_token,
-    );
-    if (!device) {
-      throw new NotFoundException('Not found device');
-    }
+    if (oldDevice) {
+      await this.accessService.updateService(oldDevice.access.id, {
+        refreshToken,
+      });
+    } else {
+      await this.accessRepo.manager.transaction(async (manager) => {
+        const access = manager.create(Access, {
+          user,
+          refreshToken,
+          expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        });
+        await manager.save(access);
 
-    await this.accessService.updateService(device.access.id, { refreshToken });
-    await this.userRepo.update(user.id, { status: UserStatus.ON });
+        const device = manager.create(Device, {
+          user,
+          access,
+          device_token,
+          type: userPayLoad.type,
+          info,
+        });
+        await manager.save(device);
+      });
+    }
 
     return {
       statusCode: 200,
@@ -114,8 +139,16 @@ export class AuthService {
     };
   }
 
-  async logoutService(user: UserPayload): Promise<void> {
-    await this.userRepo.update(user.id, { status: UserStatus.OFF });
+  async logoutService(logout: LogoutDto) {
+    const { device_token } = logout;
+    const device = await this.deviceService.findOneService(
+      'device_token',
+      device_token,
+    );
+    console.log(device);
+    if (!device) throw new BadRequestException('Logout not successfully');
+
+    await this.accessRepo.delete({ id: device.access.id });
   }
 
   async getMe(user: UserPayload) {

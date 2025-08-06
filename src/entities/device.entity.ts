@@ -11,11 +11,11 @@ enum DeviceStatus {
 
 @Entity({ name: 'device' })
 export class Device extends BaseEntity {
-  @ManyToOne(() => User, (user) => user.devices, { onDelete: 'CASCADE' })
+  @ManyToOne(() => User, (user) => user.devices)
   @JoinColumn({ name: 'user_id' })
   user: User;
 
-  @OneToOne(() => Access)
+  @OneToOne(() => Access, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'access_id' })
   access: Access;
 
@@ -25,7 +25,6 @@ export class Device extends BaseEntity {
   @Column({ name: 'device_token', nullable: true, default: null })
   device_token: string;
 
-  @Column({ type: 'jsonb', nullable: true })
   @Column({ type: 'jsonb', nullable: true })
   info: Record<string, any>;
 
