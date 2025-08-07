@@ -95,11 +95,12 @@ export class AuthService {
 
   async login(userPayLoad: LoginDto) {
     const { device_token, info } = userPayLoad;
+
     const user = await this.userService.findUserService(userPayLoad);
     const oldDevice = user.devices.find(
       (device) => device.device_token === device_token,
     );
-    if (!user) throw new NotFoundException('Not found user');
+    console.log('oldDevice', oldDevice);
 
     const accessToken = await this.generateAccessToken(user);
     const refreshToken = await this.generateRefreshToken(user);

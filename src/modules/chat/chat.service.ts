@@ -122,7 +122,8 @@ export class ChatService {
       .leftJoinAndSelect('ChatMember.chat', 'chat')
       .leftJoinAndSelect('chat.lastMessage', 'lastMessage')
       .leftJoinAndSelect('lastMessage.messageRead', 'messageRead')
-      // .leftJoinAndSelect('messageRead.user', 'user')
+      .leftJoinAndSelect('chat.chatMembers', 'chatMembers')
+      .leftJoinAndSelect('chatMembers.user', 'memberUser')
       .where('ChatMember.user = :userId', { userId: user.id })
       .orderBy(`ChatMember.${filter.orderBy}`, filter.order)
       .skip(filter.skip)
@@ -135,7 +136,7 @@ export class ChatService {
     });
 
     return new ResponsePageDto(
-      conversations.map((c) => c.chat),
+      conversations.map((c) => plainToInstance(User, c.chat)),
       pageMetaDto,
     );
   }
