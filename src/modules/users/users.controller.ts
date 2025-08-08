@@ -26,4 +26,12 @@ export class UsersController {
   ) {
     return await this.usersService.getUserWithChatPrivateService(filter, user);
   }
+
+  @Get('/device-information')
+  @ApiOperation({ summary: 'Get the device information of user' })
+  @ApiResponse({ status: HttpStatus.OK, type: User })
+  @ApiBearerAuth()
+  async getDeviceInformation(@UserAuth() user: UserPayload) {
+    return await this.usersService.getDeviceInformation(user);
+  }
 }

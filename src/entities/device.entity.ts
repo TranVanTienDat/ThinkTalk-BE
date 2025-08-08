@@ -3,6 +3,7 @@ import { BaseEntity } from '../common/entities/base.entity';
 import { User } from './user.entity';
 import { Access } from './access.entity';
 import { IsEnum } from 'class-validator';
+import { Exclude } from 'class-transformer';
 
 enum DeviceStatus {
   LOGIN = 'login',
@@ -22,6 +23,7 @@ export class Device extends BaseEntity {
   @Column({ name: 'type', nullable: true, default: null })
   type: string;
 
+  @Exclude()
   @Column({ name: 'device_token', nullable: true, default: null })
   device_token: string;
 

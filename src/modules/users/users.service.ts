@@ -7,17 +7,16 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 
+import { plainToInstance } from 'class-transformer';
+import { PageMetaDto } from 'src/common/dto';
+import { ResponsePageDto } from 'src/common/dto/response-page.dto';
 import { Repository } from 'typeorm';
 import { verifyPassword } from '../../common/utils/security.util';
 import { User } from '../../entities/user.entity';
 import { BaseAuthDto, LoginDto } from '../auth/dto/auth.dto';
-import { UserFilter } from './dto/filter.dto';
-import { PageDto, PageMetaDto } from 'src/common/dto';
-import { ResponsePageDto } from 'src/common/dto/response-page.dto';
-import { plainToInstance } from 'class-transformer';
 import { UserPayload } from '../auth/dto/user-payload.dto';
-import { Chat, ChatStatus } from 'src/entities/chat.entity';
 import { ChatService } from '../chat/chat.service';
+import { UserFilter } from './dto/filter.dto';
 
 @Injectable()
 export class UsersService {
@@ -118,5 +117,17 @@ export class UsersService {
       newUsers.map((u) => plainToInstance(User, { ...u })),
       pageMetaDto,
     );
+  }
+
+  public async getDeviceInformation(user: UserPayload) {
+    const info = await this.userRepository.findOne({
+      where: { id: user.id },
+      withDeleted: false,
+      relations: {
+        devices: true,
+      },
+    });
+
+    return plainToInstance(User, info);
   }
 }
