@@ -12,7 +12,6 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
-import { CacheDecorator } from 'src/common/decorators/cache.decorator';
 import { UserAuth } from '../../common/decorators/auth-user.decorator';
 import { AdminChatGuard } from '../../common/guard/admin-chat.guard';
 import { Chat } from '../../entities/chat.entity';
@@ -109,5 +108,21 @@ export class ChatController {
     @Param('userId') userId: string,
   ) {
     return this.chatService.findPrivateChatBetweenUsers(userId, user);
+  }
+
+  @Get('/invite-link/:id')
+  @ApiOperation({ summary: 'Get invitation link for chat group' })
+  @ApiResponse({ status: HttpStatus.OK, type: String })
+  @ApiBearerAuth()
+  async getLink(@Param('id') id: string) {
+    return await this.chatService.getLinkInvitationGroup(id);
+  }
+
+  @Get('/invite-information')
+  @ApiOperation({ summary: 'Get invitation link for chat group' })
+  @ApiResponse({ status: HttpStatus.OK, type: String })
+  @ApiBearerAuth()
+  async getInviteInformation(@Query('token') token: string) {
+    return await this.chatService.getInviteInformation(token);
   }
 }

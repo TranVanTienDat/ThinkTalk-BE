@@ -1,7 +1,13 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { plainToInstance } from 'class-transformer';
-import { MessageType } from 'src/entities/message.entity';
+import * as jwt from 'jsonwebtoken';
+import { NotificationJobType } from 'src/common/utils/constant.util';
 import { Repository } from 'typeorm';
 import { v4 as uuidv4 } from 'uuid';
 import { PageMetaDto } from '../../common/dto';
@@ -11,12 +17,11 @@ import { ChatMember, ChatRoles } from '../../entities/chatMember.entity';
 import { User } from '../../entities/user.entity';
 import { UserPayload } from '../auth/dto/user-payload.dto';
 import { MessageService } from '../message/message.service';
+import { CreateNotificationDto } from '../notification/dto/create-notification.dto';
+import { NotificationService } from '../notification/notification.service';
 import { ChatFilter } from './dto/chat.filter';
 import { ChatMemberDto, CreateChatDto } from './dto/create-chat.dto';
 import { UpdateChatDto } from './dto/update-chat.dto';
-import { NotificationService } from '../notification/notification.service';
-import { CreateNotificationDto } from '../notification/dto/create-notification.dto';
-import { NotificationJobType } from 'src/common/utils/constant.util';
 
 @Injectable()
 export class ChatService {
@@ -27,6 +32,7 @@ export class ChatService {
     private chatMemberRepo: Repository<ChatMember>,
     private messageService: MessageService,
     private notificationService: NotificationService,
+    private readonly configService: ConfigService,
   ) {}
 
   async createService(createChatDto: CreateChatDto, user: UserPayload) {
@@ -242,5 +248,56 @@ export class ChatService {
       .getOne();
 
     return { chatId: chat?.id ?? null };
+  }
+
+  public async getLinkInvitationGroup(id: string) {
+    const chat = await this.chatRepo.findOne({
+      where: { id },
+    });
+    if (!chat) return undefined;
+
+    const payload = {
+      id: chat.id,
+      name: chat.name,
+      avatar: chat.avatar,
+    };
+    const secret =
+      this.configService.get<string>('JWT_SECRET_INVITATION') ??
+      'JWT_SECRET_INVITATION';
+
+    const options: jwt.SignOptions = {
+      algorithm: 'HS256',
+      expiresIn: this.configService.get<string>(
+        'JWT_INVITATION_EXPIRATION_TIME',
+      ) as any,
+    };
+
+    const token = jwt.sign(payload, secret, options);
+
+    const link = this.configService.get<string>('LINK_FE_THINKTALK');
+
+    return `${link}?token=${token}`;
+  }
+
+  public async getInviteInformation(token: string) {
+    try {
+      return this.generateTokenGroup(token);
+    } catch (error) {
+      throw new BadRequestException(
+        error?.message || 'Token invitation không hợp lệ hoặc đã hết hạn',
+      );
+    }
+  }
+
+  private generateTokenGroup(token: string) {
+    try {
+      const secret =
+        this.configService.get<string>('JWT_SECRET_INVITATION') ??
+        'JWT_SECRET_INVITATION';
+      return jwt.verify(token, secret);
+    } catch (err) {
+      console.log('err', err);
+      throw err;
+    }
   }
 }

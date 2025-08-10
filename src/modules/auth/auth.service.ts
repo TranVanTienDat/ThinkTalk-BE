@@ -100,7 +100,6 @@ export class AuthService {
     const oldDevice = user.devices.find(
       (device) => device.device_token === device_token,
     );
-    console.log('oldDevice', oldDevice);
 
     const accessToken = await this.generateAccessToken(user);
     const refreshToken = await this.generateRefreshToken(user);
@@ -146,7 +145,6 @@ export class AuthService {
       'device_token',
       device_token,
     );
-    console.log(device);
     if (!device) throw new BadRequestException('Logout not successfully');
 
     await this.accessRepo.delete({ id: device.access.id });
