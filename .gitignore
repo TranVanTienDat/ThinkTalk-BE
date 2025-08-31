@@ -57,3 +57,5 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
 # save file
 .history
+.gemini/
+gha-creds-*.json
