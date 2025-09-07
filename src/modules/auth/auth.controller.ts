@@ -6,10 +6,10 @@ import {
   Post,
   ValidationPipe,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Public } from '../../common/decorators/public.decorator';
 import { AuthService } from './auth.service';
-import { AuthDto, LoginDto, LogoutDto } from './dto/auth.dto';
+import { AuthDto, LoginDto, LogInWithGoogleDto, LogoutDto } from './dto/auth.dto';
 import { UserData } from './dto/user-data.dto';
 import { UserAuth } from '../../common/decorators/auth-user.decorator';
 import { UserPayload } from './dto/user-payload.dto';
@@ -32,6 +32,14 @@ export class AuthController {
   @Post('login')
   async login(@Body() userData: LoginDto): Promise<any> {
     return this.authService.login(userData);
+  }
+
+  @Public()
+  @ApiOperation({ summary: 'Login with google' })
+  @ApiResponse({ status: HttpStatus.OK, type: UserData })
+  @Post('login-google')
+  async loginGoogle(@Body() body:LogInWithGoogleDto): Promise<any> {
+    return this.authService.loginGoogle(body);
   }
 
   @ApiOperation({ summary: 'Logout' })

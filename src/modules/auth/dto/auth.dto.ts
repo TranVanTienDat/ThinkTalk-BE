@@ -30,6 +30,9 @@ export class AuthDto extends BaseAuthDto {
   })
   @IsNotEmpty()
   info: Record<string, any>;
+
+  @ApiProperty({ description: 'avatar', example: 'link' })
+  avatar?: string;
 }
 
 export class LoginDto extends BaseAuthDto {
@@ -38,6 +41,29 @@ export class LoginDto extends BaseAuthDto {
 }
 
 export class LogoutDto {
+  @ApiProperty({ description: 'Device token', example: '32435ggbd5' })
+  @IsNotEmpty()
+  device_token: string;
+}
+
+
+
+export class LogInWithGoogleDto {
+  @ApiProperty({ description: 'Token', example: '32435ggbd5' })
+  @IsNotEmpty()
+  token: string;
+
+   @ApiProperty({
+    description: 'Additional info as JSON object',
+    example: { browser: 'chrome' },
+  })
+    @IsNotEmpty()
+  info: Record<string, any>;
+
+    @ApiProperty({ description: 'Type device', example: 'Mobile' })
+    @IsNotEmpty()
+    type: string;
+
   @ApiProperty({ description: 'Device token', example: '32435ggbd5' })
   @IsNotEmpty()
   device_token: string;
