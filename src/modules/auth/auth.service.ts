@@ -16,7 +16,12 @@ import { Device } from '../../entities/device.entity';
 import { User, UserStatus } from '../../entities/user.entity';
 import { AccessService } from '../access/access.service';
 import { UsersService } from '../users/users.service';
-import { AuthDto, LoginDto, LogInWithGoogleDto, LogoutDto } from './dto/auth.dto';
+import {
+  AuthDto,
+  LoginDto,
+  LogInWithGoogleDto,
+  LogoutDto,
+} from './dto/auth.dto';
 import { UserData } from './dto/user-data.dto';
 import { UserPayload } from './dto/user-payload.dto';
 import { v4 as uuidv4 } from 'uuid';
@@ -38,7 +43,8 @@ export class AuthService {
   ) {}
 
   async register(registerDto: AuthDto) {
-    const { email, password, fullName, device_token, type, info, avatar } = registerDto;
+    const { email, password, fullName, device_token, type, info, avatar } =
+      registerDto;
     const isUser = await this.userService.findUserByEmailService(registerDto);
 
     if (isUser) {
@@ -55,7 +61,7 @@ export class AuthService {
         email,
         password: hashedPassword,
         fullName,
-        avatar:avatar || `https://i.pravatar.cc/150?u=${uuidv4()}`,
+        avatar: avatar || `https://i.pravatar.cc/150?u=${uuidv4()}`,
       });
       await manager.save(user);
 
@@ -140,63 +146,72 @@ export class AuthService {
     };
   }
 
-
-    async loginGoogle(body:LogInWithGoogleDto) {
-      try {
-      const {device_token,info,token,type} =body
+  async loginGoogle(body: LogInWithGoogleDto) {
+    try {
+      const { device_token, info, token, type } = body;
       const client = new OAuth2Client();
-      const account = await client.verifyIdToken({idToken:token});
-      const  payload = account.getPayload();
-    const user = await this.userService.findUserByEmailService({email:payload.email});
-    if(!user) {
-      const registerInfo: AuthDto = {device_token,email:payload.email,fullName:payload.name,password:payload.email,type,info}
-       return await this.register(registerInfo)
-    }
-    const oldDevice = user.devices.find(
-      (device) => device.device_token === device_token,
-    );
-
-    const accessToken = await this.generateAccessToken(user);
-    const refreshToken = await this.generateRefreshToken(user);
-
-    if (oldDevice) {
-      await this.accessService.updateService(oldDevice.access.id, {
-        refreshToken,
+      const account = await client.verifyIdToken({ idToken: token });
+      const payload = account.getPayload();
+      const user = await this.userService.findUserByEmailService({
+        email: payload.email,
       });
-    } else {
-      await this.accessRepo.manager.transaction(async (manager) => {
-        const access = manager.create(Access, {
-          user,
-          refreshToken,
-          expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-        });
-        await manager.save(access);
 
-        const device = manager.create(Device, {
-          user,
-          access,
+      if (!user) {
+        const registerInfo: AuthDto = {
           device_token,
+          email: payload.email,
+          fullName: payload.name,
+          password: payload.email,
           type,
           info,
-        });
-        await manager.save(device);
-      });
-    }
-
-    return {
-      statusCode: 200,
-      message: 'Login successfully !',
-      user: plainToInstance(UserData, {
-        ...user,
-        accessToken,
-        refreshToken,
-      }),
-    };
-      } catch (error) {
-         console.log("error",error)
-         throw error
+        };
+        return await this.register(registerInfo);
       }
-      
+
+      const oldDevice = user.devices.find(
+        (device) => device.device_token === device_token,
+      );
+
+      const accessToken = await this.generateAccessToken(user);
+      const refreshToken = await this.generateRefreshToken(user);
+
+      if (oldDevice) {
+        await this.accessService.updateService(oldDevice.access.id, {
+          refreshToken,
+        });
+      } else {
+        await this.accessRepo.manager.transaction(async (manager) => {
+          const access = manager.create(Access, {
+            user,
+            refreshToken,
+            expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+          });
+          await manager.save(access);
+
+          const device = manager.create(Device, {
+            user,
+            access,
+            device_token,
+            type,
+            info,
+          });
+          await manager.save(device);
+        });
+      }
+
+      return {
+        statusCode: 200,
+        message: 'Login successfully !',
+        user: plainToInstance(UserData, {
+          ...user,
+          accessToken,
+          refreshToken,
+        }),
+      };
+    } catch (error) {
+      console.log('error', error);
+      throw error;
+    }
   }
 
   async logoutService(logout: LogoutDto) {

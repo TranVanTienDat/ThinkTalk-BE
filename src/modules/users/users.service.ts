@@ -33,6 +33,12 @@ export class UsersService {
 
   public async findUserByEmailService(value: Partial<BaseAuthDto>) {
     const user = await this.userRepository.findOne({
+      relations: {
+        devices: {
+          access: true,
+        },
+        access: true,
+      },
       where: { email: value.email },
       withDeleted: false,
     });
