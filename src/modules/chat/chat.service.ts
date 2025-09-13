@@ -1,5 +1,7 @@
 import {
   BadRequestException,
+  forwardRef,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -22,6 +24,7 @@ import { NotificationService } from '../notification/notification.service';
 import { ChatFilter } from './dto/chat.filter';
 import { ChatMemberDto, CreateChatDto } from './dto/create-chat.dto';
 import { UpdateChatDto } from './dto/update-chat.dto';
+import { UsersService } from '../users/users.service';
 
 @Injectable()
 export class ChatService {
@@ -29,10 +32,12 @@ export class ChatService {
     @InjectRepository(Chat)
     private chatRepo: Repository<Chat>,
     @InjectRepository(ChatMember)
-    private chatMemberRepo: Repository<ChatMember>,
-    private messageService: MessageService,
-    private notificationService: NotificationService,
+    private readonly chatMemberRepo: Repository<ChatMember>,
+    private readonly messageService: MessageService,
+    private readonly notificationService: NotificationService,
     private readonly configService: ConfigService,
+    @Inject(forwardRef(() => UsersService))
+    private readonly userService: UsersService,
   ) {}
 
   async createService(createChatDto: CreateChatDto, user: UserPayload) {
@@ -74,22 +79,29 @@ export class ChatService {
         relations: ['chatMembers', 'messages', 'lastMessage'],
       });
 
+      const getUser = await this.userService.findUserByIdService(user.id);
+
+      
+
       const notification: CreateNotificationDto<Partial<Chat>> = {
         data: {
           id: getChat.id,
           name: getChat.name,
           avatar: getChat.avatar,
         },
-        message: `${user.fullName} đã tạo nhóm ${getChat.name}`,
+        message: `${getUser.fullName} đã tạo nhóm ${getChat.name}`,
         type: NotificationJobType.GROUP_CREATED,
-        actor: user.fullName,
+        actor: getUser.fullName,
         target: `Nhóm ${getChat.name}`,
-        receiverIds: chatMembers.map((chatMember) => chatMember.userId),
+        receiverIds: chatMembers
+          .filter((chatMember) => chatMember.userId !== user.id)
+          .map((chatMember) => chatMember.userId),
       };
-
-      await this.notificationService.create({
-        ...notification,
-      });
+       if(chat.type === ChatStatus.Gr) {
+         await this.notificationService.create({
+           ...notification,
+         });
+       }
 
       return getChat;
     });

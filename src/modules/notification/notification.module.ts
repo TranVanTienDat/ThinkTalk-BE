@@ -7,6 +7,7 @@ import { Notification } from 'src/entities/notification.entity';
 import { BullModule } from '@nestjs/bullmq';
 import { QUEUES } from 'src/common/utils/constant.util';
 import { ChatModule } from '../chat/chat.module';
+import { NotificationGateway } from './notification.gateway';
 
 @Module({
   imports: [
@@ -25,7 +26,7 @@ import { ChatModule } from '../chat/chat.module';
     forwardRef(() => ChatModule),
   ],
   controllers: [NotificationController],
-  providers: [NotificationService, NotificationConsumer],
-  exports: [NotificationService],
+  providers: [NotificationService, NotificationConsumer,NotificationGateway],
+  exports: [NotificationService,NotificationGateway],
 })
 export class NotificationModule {}

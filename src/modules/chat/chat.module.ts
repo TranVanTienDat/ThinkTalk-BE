@@ -17,6 +17,8 @@ import { NotificationModule } from '../notification/notification.module';
     MessageModule,
     MessageReadModule,
     NotificationModule,
+    forwardRef(() => MessageReadModule),
+    forwardRef(() => NotificationModule),
   ],
   controllers: [ChatController],
   providers: [ChatService, ChatWebsocketGateway],
